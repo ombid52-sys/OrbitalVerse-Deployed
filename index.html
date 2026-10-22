@@ -1,0 +1,2806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrbitalVerse</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>∇</text></svg>">
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React 18 & ReactDOM 18 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone for JSX transformation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons Vanilla CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    }
+    /* Custom clean scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(150, 150, 150, 0.28);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(150, 150, 150, 0.5);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-[#131314] text-[#e3e3e3]">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+    // Lightweight inline SVG icons matching Lucide specifications
+    const Search = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    );
+    const ChevronLeft = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    );
+    const ChevronRight = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    );
+    const Copy = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+    );
+    const Check = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    );
+    const Play = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+    );
+    const Pause = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+    );
+    const RotateCcw = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    );
+    const SkipBack = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5" stroke="currentColor" strokeWidth="2"/></svg>
+    );
+    const SkipForward = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19" stroke="currentColor" strokeWidth="2"/></svg>
+    );
+    const Sun = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    );
+    const Moon = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    );
+
+    const ORBITAL_LABELS = {
+      s: ['s'],
+      p: ['p_x', 'p_z', 'p_y'],
+      d: ['d_xy', 'd_yz', 'd_z²', 'd_xz', 'd_x²-y²'],
+      f: [
+        'f_y(3x²-y²)',
+        'f_xyz',
+        'f_yz²',
+        'f_z³',
+        'f_xz²',
+        'f_z(x²-y²)',
+        'f_x(x²-3y²)'
+      ]
+    };
+
+    const ORBITAL_DESCRIPTIONS = {
+      s: 'Spherical probability density |Y₀⁰|² with (n − 1) concentric radial nodes.',
+      'p_x': 'Two-lobed dumbbell oriented along the X-axis; nodal plane at x = 0 (YZ plane).',
+      'p_y': 'Two-lobed dumbbell oriented along the Y-axis; nodal plane at y = 0 (XZ plane).',
+      'p_z': 'Two-lobed dumbbell oriented along the Z-axis; nodal plane at z = 0 (XY plane).',
+      'd_xy': 'Four-lobed cloverleaf in the XY plane with lobes between X and Y axes.',
+      'd_xz': 'Four-lobed cloverleaf in the XZ plane with lobes between X and Z axes.',
+      'd_yz': 'Four-lobed cloverleaf in the YZ plane with lobes between Y and Z axes.',
+      'd_x²-y²': 'Four-lobed cloverleaf in the XY plane with lobes aligned along the X and Y axes.',
+      'd_z²': 'Two axial lobes along the Z-axis surrounded by an equatorial toroidal belt in the XY plane.',
+      'f_z³': 'Axial lobes along Z with two conical nodal surfaces (54.7°) creating twin equatorial rings.',
+      'f_xz²': 'Six-lobed geometry lying primarily in the XZ plane driven by P₃¹(cos θ) cos φ.',
+      'f_yz²': 'Six-lobed geometry lying primarily in the YZ plane driven by P₃¹(cos θ) sin φ.',
+      'f_xyz': 'Eight-lobed octupolar geometry pointing toward the 8 octants of 3D Cartesian space.',
+      'f_z(x²-y²)': 'Eight-lobed octupolar geometry rotated 45° around the Z-axis relative to f_xyz.',
+      'f_x(x²-3y²)': 'Six-lobed planar hexagonal distribution in the XY plane (cos 3φ symmetry).',
+      'f_y(3x²-y²)': 'Six-lobed planar hexagonal distribution in the XY plane (sin 3φ symmetry).'
+    };
+
+    function evalRealSphericalHarmonic(l, mIndex, nx, ny, nz) {
+      if (l === 0) return 0.5;
+      if (l === 1) {
+        if (mIndex === 0) return 0.85 * nx;
+        if (mIndex === 1) return 0.85 * nz;
+        return 0.85 * ny;
+      }
+      if (l === 2) {
+        if (mIndex === 0) return 1.75 * nx * ny;
+        if (mIndex === 1) return 1.75 * ny * nz;
+        if (mIndex === 2) return 0.55 * (3 * nz * nz - 1);
+        if (mIndex === 3) return 1.75 * nx * nz;
+        return 0.88 * (nx * nx - ny * ny);
+      }
+      if (l === 3) {
+        if (mIndex === 0) return 0.95 * ny * (3 * nx * nx - ny * ny);
+        if (mIndex === 1) return 3.1 * nx * ny * nz;
+        if (mIndex === 2) return 0.85 * ny * (5 * nz * nz - 1);
+        if (mIndex === 3) return 0.55 * nz * (5 * nz * nz - 3);
+        if (mIndex === 4) return 0.85 * nx * (5 * nz * nz - 1);
+        if (mIndex === 5) return 1.55 * nz * (nx * nx - ny * ny);
+        return 0.95 * nx * (nx * nx - 3 * ny * ny);
+      }
+      return 0.5;
+    }
+
+    function buildOrbitalSurfaceMesh(n, l, mIndex, color) {
+      const baseR = 26 + n * 22;
+      const nTheta = l === 0 ? 18 : 26;
+      const nPhi = l === 0 ? 28 : 40;
+      const vertices = [];
+
+      for (let i = 0; i <= nTheta; i++) {
+        const theta = (i / nTheta) * Math.PI;
+        const sinT = Math.sin(theta);
+        const cosT = Math.cos(theta);
+        const row = [];
+
+        for (let j = 0; j <= nPhi; j++) {
+          const phi = (j / nPhi) * Math.PI * 2;
+          const nx = sinT * Math.cos(phi);
+          const ny = sinT * Math.sin(phi);
+          const nz = cosT;
+
+          const yVal = evalRealSphericalHarmonic(l, mIndex, nx, ny, nz);
+          const amp = Math.abs(yVal);
+          const r = l === 0 ? baseR * 0.72 : baseR * amp * 1.05;
+
+          row.push({
+            x: nx * r,
+            y: ny * r,
+            z: nz * r,
+            nx,
+            ny,
+            nz,
+            amp,
+            phaseSign: yVal >= 0 ? 1 : -1
+          });
+        }
+        vertices.push(row);
+      }
+
+      const faces = [];
+      for (let i = 0; i < nTheta; i++) {
+        for (let j = 0; j < nPhi; j++) {
+          const v00 = vertices[i][j];
+          const v10 = vertices[i + 1][j];
+          const v11 = vertices[i + 1][j + 1];
+          const v01 = vertices[i][j + 1];
+
+          const maxAmp = Math.max(v00.amp, v10.amp, v11.amp, v01.amp);
+          if (maxAmp < 0.06) continue;
+
+          faces.push({
+            verts: [v00, v10, v11, v01],
+            cx: (v00.x + v10.x + v11.x + v01.x) * 0.25,
+            cy: (v00.y + v10.y + v11.y + v01.y) * 0.25,
+            cz: (v00.z + v10.z + v11.z + v01.z) * 0.25,
+            nx: (v00.nx + v10.nx + v11.nx + v01.nx) * 0.25,
+            ny: (v00.ny + v10.ny + v11.ny + v01.ny) * 0.25,
+            nz: (v00.nz + v10.nz + v11.nz + v01.nz) * 0.25,
+            phaseSign: v00.phaseSign,
+            color
+          });
+        }
+      }
+
+      return faces;
+    }
+
+    const SUBSHELL_ORDER = [
+      '1s', '2s', '2p', '3s', '3p', '4s', '3d', '4p', '5s', '4d', '5p',
+      '6s', '4f', '5d', '6p', '7s', '5f', '6d', '7p'
+    ];
+
+    const SHELL_ORDER = [
+      '1s',
+      '2s', '2p',
+      '3s', '3p', '3d',
+      '4s', '4p', '4d', '4f',
+      '5s', '5p', '5d', '5f',
+      '6s', '6p', '6d',
+      '7s', '7p'
+    ];
+
+    const SUBSHELL_CAPACITY = { s: 2, p: 6, d: 10, f: 14 };
+    const SUBSHELL_BOXES = { s: 1, p: 3, d: 5, f: 7 };
+    const L_QUANTUM_NUMBER = { s: 0, p: 1, d: 2, f: 3 };
+    const SHELL_LETTERS = ['K', 'L', 'M', 'N', 'O', 'P', 'Q'];
+
+    const NOBLE_GASES = [
+      { z: 2, symbol: 'He', subshells: ['1s'] },
+      { z: 10, symbol: 'Ne', subshells: ['1s', '2s', '2p'] },
+      { z: 18, symbol: 'Ar', subshells: ['1s', '2s', '2p', '3s', '3p'] },
+      { z: 36, symbol: 'Kr', subshells: ['1s', '2s', '2p', '3s', '3p', '4s', '3d', '4p'] },
+      { z: 54, symbol: 'Xe', subshells: ['1s', '2s', '2p', '3s', '3p', '4s', '3d', '4p', '5s', '4d', '5p'] },
+      { z: 86, symbol: 'Rn', subshells: ['1s', '2s', '2p', '3s', '3p', '4s', '3d', '4p', '5s', '4d', '5p', '6s', '4f', '5d', '6p'] }
+    ];
+
+    const SUPERSCRIPTS = {
+      '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+      '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+    };
+
+    function toSuperscript(num) {
+      return String(num)
+        .split('')
+        .map((ch) => SUPERSCRIPTS[ch] || ch)
+        .join('');
+    }
+
+    const ANOMALOUS_CONFIGS = {
+      24: { valence: { '4s': 1, '3d': 5 }, reason: 'Half-filled 3d⁵ subshell maximizes exchange energy and lowers repulsion.' },
+      29: { valence: { '4s': 1, '3d': 10 }, reason: 'Fully-filled 3d¹⁰ subshell provides high symmetry and exchange stabilization.' },
+      41: { valence: { '5s': 1, '4d': 4 }, reason: 'Close 5s/4d energies and reduced 4d electron repulsion favor 5s¹ 4d⁴.' },
+      42: { valence: { '5s': 1, '4d': 5 }, reason: 'Half-filled 4d⁵ and 5s¹ maximize exchange energy with 6 parallel spins.' },
+      44: { valence: { '5s': 1, '4d': 7 }, reason: 'Relieving 5s² pairing repulsion and 4d radial contraction stabilizes 5s¹ 4d⁷.' },
+      45: { valence: { '5s': 1, '4d': 8 }, reason: 'Lower coulombic repulsion in 4d⁸ 5s¹ than 4d⁷ 5s².' },
+      46: { valence: { '4d': 10 }, reason: 'Double promotion fills the 4d¹⁰ subshell completely ([Kr] 4d¹⁰ 5s⁰).' },
+      47: { valence: { '5s': 1, '4d': 10 }, reason: 'Fully-filled 4d¹⁰ subshell stability analogous to Copper.' },
+      57: { valence: { '6s': 2, '5d': 1 }, reason: '4f lies slightly higher than 5d at Z=57; differentiating electron enters 5d¹.' },
+      58: { valence: { '6s': 2, '4f': 1, '5d': 1 }, reason: 'Near-degeneracy of 4f and 5d orbitals yields [Xe] 6s² 4f¹ 5d¹.' },
+      64: { valence: { '6s': 2, '4f': 7, '5d': 1 }, reason: 'Half-filled 4f⁷ core stability places the 8th electron into 5d¹.' },
+      78: { valence: { '6s': 1, '4f': 14, '5d': 9 }, reason: 'Relativistic 6s contraction and relief of 6s² pairing repulsion favor 6s¹ 5d⁹.' },
+      79: { valence: { '6s': 1, '4f': 14, '5d': 10 }, reason: 'Completed 5d¹⁰ subshell plus relativistic 6s¹ stabilization.' },
+      89: { valence: { '7s': 2, '6d': 1 }, reason: '6d lies lower in energy than 5f at the start of the actinide series.' },
+      90: { valence: { '7s': 2, '6d': 2 }, reason: '6d orbitals remain lower than 5f in neutral Thorium ([Rn] 7s² 6d²).' },
+      91: { valence: { '7s': 2, '5f': 2, '6d': 1 }, reason: '5f orbitals drop below 6d at Z=91, yielding [Rn] 7s² 5f² 6d¹.' },
+      92: { valence: { '7s': 2, '5f': 3, '6d': 1 }, reason: '5f and 6d competition stabilizes [Rn] 7s² 5f³ 6d¹ in Uranium.' },
+      93: { valence: { '7s': 2, '5f': 4, '6d': 1 }, reason: '5f/6d proximity retains a single 6d¹ electron in Neptunium.' },
+      96: { valence: { '7s': 2, '5f': 7, '6d': 1 }, reason: 'Half-filled 5f⁷ core stability places the extra electron into 6d¹.' },
+      103: { valence: { '7s': 2, '5f': 14, '7p': 1 }, reason: 'Relativistic spin-orbit splitting stabilizes 7p₁/₂ below 6d₃/₂.' },
+      111: { valence: { '7s': 1, '5f': 14, '6d': 10 }, reason: 'Relativistic 7s contraction and closed 6d¹⁰ shell ([Rn] 7s¹ 5f¹⁴ 6d¹⁰).' }
+    };
+
+    const RAW_ELEMENTS = [
+      [1, 'H', 'Hydrogen', 1, 1, 's', 'Reactive Nonmetal', 1.008],
+      [2, 'He', 'Helium', 1, 18, 's', 'Noble Gas', 4.0026],
+      [3, 'Li', 'Lithium', 2, 1, 's', 'Alkali Metal', 6.94],
+      [4, 'Be', 'Beryllium', 2, 2, 's', 'Alkaline Earth Metal', 9.0122],
+      [5, 'B', 'Boron', 2, 13, 'p', 'Metalloid', 10.81],
+      [6, 'C', 'Carbon', 2, 14, 'p', 'Reactive Nonmetal', 12.011],
+      [7, 'N', 'Nitrogen', 2, 15, 'p', 'Reactive Nonmetal', 14.007],
+      [8, 'O', 'Oxygen', 2, 16, 'p', 'Reactive Nonmetal', 15.999],
+      [9, 'F', 'Fluorine', 2, 17, 'p', 'Reactive Nonmetal', 18.998],
+      [10, 'Ne', 'Neon', 2, 18, 'p', 'Noble Gas', 20.180],
+      [11, 'Na', 'Sodium', 3, 1, 's', 'Alkali Metal', 22.990],
+      [12, 'Mg', 'Magnesium', 3, 2, 's', 'Alkaline Earth Metal', 24.305],
+      [13, 'Al', 'Aluminium', 3, 13, 'p', 'Post-Transition Metal', 26.982],
+      [14, 'Si', 'Silicon', 3, 14, 'p', 'Metalloid', 28.085],
+      [15, 'P', 'Phosphorus', 3, 15, 'p', 'Reactive Nonmetal', 30.974],
+      [16, 'S', 'Sulfur', 3, 16, 'p', 'Reactive Nonmetal', 32.06],
+      [17, 'Cl', 'Chlorine', 3, 17, 'p', 'Reactive Nonmetal', 35.45],
+      [18, 'Ar', 'Argon', 3, 18, 'p', 'Noble Gas', 39.948],
+      [19, 'K', 'Potassium', 4, 1, 's', 'Alkali Metal', 39.098],
+      [20, 'Ca', 'Calcium', 4, 2, 's', 'Alkaline Earth Metal', 40.078],
+      [21, 'Sc', 'Scandium', 4, 3, 'd', 'Transition Metal', 44.956],
+      [22, 'Ti', 'Titanium', 4, 4, 'd', 'Transition Metal', 47.867],
+      [23, 'V', 'Vanadium', 4, 5, 'd', 'Transition Metal', 50.942],
+      [24, 'Cr', 'Chromium', 4, 6, 'd', 'Transition Metal', 51.996],
+      [25, 'Mn', 'Manganese', 4, 7, 'd', 'Transition Metal', 54.938],
+      [26, 'Fe', 'Iron', 4, 8, 'd', 'Transition Metal', 55.845],
+      [27, 'Co', 'Cobalt', 4, 9, 'd', 'Transition Metal', 58.933],
+      [28, 'Ni', 'Nickel', 4, 10, 'd', 'Transition Metal', 58.693],
+      [29, 'Cu', 'Copper', 4, 11, 'd', 'Transition Metal', 63.546],
+      [30, 'Zn', 'Zinc', 4, 12, 'd', 'Transition Metal', 65.38],
+      [31, 'Ga', 'Gallium', 4, 13, 'p', 'Post-Transition Metal', 69.723],
+      [32, 'Ge', 'Germanium', 4, 14, 'p', 'Metalloid', 72.630],
+      [33, 'As', 'Arsenic', 4, 15, 'p', 'Metalloid', 74.922],
+      [34, 'Se', 'Selenium', 4, 16, 'p', 'Reactive Nonmetal', 78.971],
+      [35, 'Br', 'Bromine', 4, 17, 'p', 'Reactive Nonmetal', 79.904],
+      [36, 'Kr', 'Krypton', 4, 18, 'p', 'Noble Gas', 83.798],
+      [37, 'Rb', 'Rubidium', 5, 1, 's', 'Alkali Metal', 85.468],
+      [38, 'Sr', 'Strontium', 5, 2, 's', 'Alkaline Earth Metal', 87.62],
+      [39, 'Y', 'Yttrium', 5, 3, 'd', 'Transition Metal', 88.906],
+      [40, 'Zr', 'Zirconium', 5, 4, 'd', 'Transition Metal', 91.224],
+      [41, 'Nb', 'Niobium', 5, 5, 'd', 'Transition Metal', 92.906],
+      [42, 'Mo', 'Molybdenum', 5, 6, 'd', 'Transition Metal', 95.95],
+      [43, 'Tc', 'Technetium', 5, 7, 'd', 'Transition Metal', 98],
+      [44, 'Ru', 'Ruthenium', 5, 8, 'd', 'Transition Metal', 101.07],
+      [45, 'Rh', 'Rhodium', 5, 9, 'd', 'Transition Metal', 102.91],
+      [46, 'Pd', 'Palladium', 5, 10, 'd', 'Transition Metal', 106.42],
+      [47, 'Ag', 'Silver', 5, 11, 'd', 'Transition Metal', 107.87],
+      [48, 'Cd', 'Cadmium', 5, 12, 'd', 'Transition Metal', 112.41],
+      [49, 'In', 'Indium', 5, 13, 'p', 'Post-Transition Metal', 114.82],
+      [50, 'Sn', 'Tin', 5, 14, 'p', 'Post-Transition Metal', 118.71],
+      [51, 'Sb', 'Antimony', 5, 15, 'p', 'Metalloid', 121.76],
+      [52, 'Te', 'Tellurium', 5, 16, 'p', 'Metalloid', 127.60],
+      [53, 'I', 'Iodine', 5, 17, 'p', 'Reactive Nonmetal', 126.90],
+      [54, 'Xe', 'Xenon', 5, 18, 'p', 'Noble Gas', 131.29],
+      [55, 'Cs', 'Caesium', 6, 1, 's', 'Alkali Metal', 132.91],
+      [56, 'Ba', 'Barium', 6, 2, 's', 'Alkaline Earth Metal', 137.33],
+      [57, 'La', 'Lanthanum', 6, 3, 'd', 'Transition Metal', 138.91],
+      [58, 'Ce', 'Cerium', 6, null, 'f', 'Lanthanide', 140.12],
+      [59, 'Pr', 'Praseodymium', 6, null, 'f', 'Lanthanide', 140.91],
+      [60, 'Nd', 'Neodymium', 6, null, 'f', 'Lanthanide', 144.24],
+      [61, 'Pm', 'Promethium', 6, null, 'f', 'Lanthanide', 145],
+      [62, 'Sm', 'Samarium', 6, null, 'f', 'Lanthanide', 150.36],
+      [63, 'Eu', 'Europium', 6, null, 'f', 'Lanthanide', 151.96],
+      [64, 'Gd', 'Gadolinium', 6, null, 'f', 'Lanthanide', 157.25],
+      [65, 'Tb', 'Terbium', 6, null, 'f', 'Lanthanide', 158.93],
+      [66, 'Dy', 'Dysprosium', 6, null, 'f', 'Lanthanide', 162.50],
+      [67, 'Ho', 'Holmium', 6, null, 'f', 'Lanthanide', 164.93],
+      [68, 'Er', 'Erbium', 6, null, 'f', 'Lanthanide', 167.26],
+      [69, 'Tm', 'Thulium', 6, null, 'f', 'Lanthanide', 168.93],
+      [70, 'Yb', 'Ytterbium', 6, null, 'f', 'Lanthanide', 173.05],
+      [71, 'Lu', 'Lutetium', 6, null, 'f', 'Lanthanide', 174.97],
+      [72, 'Hf', 'Hafnium', 6, 4, 'd', 'Transition Metal', 178.49],
+      [73, 'Ta', 'Tantalum', 6, 5, 'd', 'Transition Metal', 180.95],
+      [74, 'W', 'Tungsten', 6, 6, 'd', 'Transition Metal', 183.84],
+      [75, 'Re', 'Rhenium', 6, 7, 'd', 'Transition Metal', 186.21],
+      [76, 'Os', 'Osmium', 6, 8, 'd', 'Transition Metal', 190.23],
+      [77, 'Ir', 'Iridium', 6, 9, 'd', 'Transition Metal', 192.22],
+      [78, 'Pt', 'Platinum', 6, 10, 'd', 'Transition Metal', 195.08],
+      [79, 'Au', 'Gold', 6, 11, 'd', 'Transition Metal', 196.97],
+      [80, 'Hg', 'Mercury', 6, 12, 'd', 'Transition Metal', 200.59],
+      [81, 'Tl', 'Thallium', 6, 13, 'p', 'Post-Transition Metal', 204.38],
+      [82, 'Pb', 'Lead', 6, 14, 'p', 'Post-Transition Metal', 207.2],
+      [83, 'Bi', 'Bismuth', 6, 15, 'p', 'Post-Transition Metal', 208.98],
+      [84, 'Po', 'Polonium', 6, 16, 'p', 'Post-Transition Metal', 209],
+      [85, 'At', 'Astatine', 6, 17, 'p', 'Metalloid', 210],
+      [86, 'Rn', 'Radon', 6, 18, 'p', 'Noble Gas', 222],
+      [87, 'Fr', 'Francium', 7, 1, 's', 'Alkali Metal', 223],
+      [88, 'Ra', 'Radium', 7, 2, 's', 'Alkaline Earth Metal', 226],
+      [89, 'Ac', 'Actinium', 7, 3, 'd', 'Transition Metal', 227],
+      [90, 'Th', 'Thorium', 7, null, 'f', 'Actinide', 232.04],
+      [91, 'Pa', 'Protactinium', 7, null, 'f', 'Actinide', 231.04],
+      [92, 'U', 'Uranium', 7, null, 'f', 'Actinide', 238.03],
+      [93, 'Np', 'Neptunium', 7, null, 'f', 'Actinide', 237],
+      [94, 'Pu', 'Plutonium', 7, null, 'f', 'Actinide', 244],
+      [95, 'Am', 'Americium', 7, null, 'f', 'Actinide', 243],
+      [96, 'Cm', 'Curium', 7, null, 'f', 'Actinide', 247],
+      [97, 'Bk', 'Berkelium', 7, null, 'f', 'Actinide', 247],
+      [98, 'Cf', 'Californium', 7, null, 'f', 'Actinide', 251],
+      [99, 'Es', 'Einsteinium', 7, null, 'f', 'Actinide', 252],
+      [100, 'Fm', 'Fermium', 7, null, 'f', 'Actinide', 257],
+      [101, 'Md', 'Mendelevium', 7, null, 'f', 'Actinide', 258],
+      [102, 'No', 'Nobelium', 7, null, 'f', 'Actinide', 259],
+      [103, 'Lr', 'Lawrencium', 7, null, 'f', 'Actinide', 266],
+      [104, 'Rf', 'Rutherfordium', 7, 4, 'd', 'Transition Metal', 267],
+      [105, 'Db', 'Dubnium', 7, 5, 'd', 'Transition Metal', 268],
+      [106, 'Sg', 'Seaborgium', 7, 6, 'd', 'Transition Metal', 269],
+      [107, 'Bh', 'Bohrium', 7, 7, 'd', 'Transition Metal', 270],
+      [108, 'Hs', 'Hassium', 7, 8, 'd', 'Transition Metal', 277],
+      [109, 'Mt', 'Meitnerium', 7, 9, 'd', 'Transition Metal', 278],
+      [110, 'Ds', 'Darmstadtium', 7, 10, 'd', 'Transition Metal', 281],
+      [111, 'Rg', 'Roentgenium', 7, 11, 'd', 'Transition Metal', 282],
+      [112, 'Cn', 'Copernicium', 7, 12, 'd', 'Transition Metal', 285],
+      [113, 'Nh', 'Nihonium', 7, 13, 'p', 'Post-Transition Metal', 286],
+      [114, 'Fl', 'Flerovium', 7, 14, 'p', 'Post-Transition Metal', 289],
+      [115, 'Mc', 'Moscovium', 7, 15, 'p', 'Post-Transition Metal', 290],
+      [116, 'Lv', 'Livermorium', 7, 16, 'p', 'Post-Transition Metal', 293],
+      [117, 'Ts', 'Tennessine', 7, 17, 'p', 'Post-Transition Metal', 294],
+      [118, 'Og', 'Oganesson', 7, 18, 'p', 'Noble Gas', 294]
+    ];
+
+    function computeAufbauSubshells(electronCount) {
+      let remaining = electronCount;
+      const subshells = {};
+      for (const sub of SUBSHELL_ORDER) {
+        if (remaining <= 0) break;
+        const type = sub[1];
+        const cap = SUBSHELL_CAPACITY[type];
+        const fill = Math.min(remaining, cap);
+        if (fill > 0) {
+          subshells[sub] = fill;
+          remaining -= fill;
+        }
+      }
+      return subshells;
+    }
+
+    function computeGroundStateSubshells(z) {
+      const anomaly = ANOMALOUS_CONFIGS[z];
+      if (!anomaly) return computeAufbauSubshells(z);
+
+      let coreGas = null;
+      for (let i = NOBLE_GASES.length - 1; i >= 0; i--) {
+        if (NOBLE_GASES[i].z < z) {
+          coreGas = NOBLE_GASES[i];
+          break;
+        }
+      }
+      const subshells = {};
+      if (coreGas) {
+        for (const sub of coreGas.subshells) {
+          subshells[sub] = SUBSHELL_CAPACITY[sub[1]];
+        }
+      }
+      for (const [sub, count] of Object.entries(anomaly.valence)) {
+        if (count > 0) subshells[sub] = count;
+      }
+      return subshells;
+    }
+
+    function formatConfigString(subshellsMap, orderType = 'aufbau') {
+      const orderList = orderType === 'shell' ? SHELL_ORDER : SUBSHELL_ORDER;
+      return orderList
+        .filter((sub) => subshellsMap[sub] > 0)
+        .map((sub) => `${sub}${toSuperscript(subshellsMap[sub])}`)
+        .join(' ');
+    }
+
+    function formatNobleGasString(z, subshellsMap, orderType = 'aufbau') {
+      if (z <= 2) return formatConfigString(subshellsMap, orderType);
+      let coreGas = null;
+      for (let i = NOBLE_GASES.length - 1; i >= 0; i--) {
+        if (NOBLE_GASES[i].z < z) {
+          coreGas = NOBLE_GASES[i];
+          break;
+        }
+      }
+      if (!coreGas) return formatConfigString(subshellsMap, orderType);
+
+      const coreSet = new Set(coreGas.subshells);
+      const orderList = orderType === 'shell' ? SHELL_ORDER : SUBSHELL_ORDER;
+      const valenceParts = orderList
+        .filter((sub) => !coreSet.has(sub) && subshellsMap[sub] > 0)
+        .map((sub) => `${sub}${toSuperscript(subshellsMap[sub])}`);
+
+      return `[${coreGas.symbol}] ${valenceParts.join(' ')}`.trim();
+    }
+
+    function computeShellDistribution(subshellsMap) {
+      const shells = [0, 0, 0, 0, 0, 0, 0];
+      for (const [sub, count] of Object.entries(subshellsMap)) {
+        const n = parseInt(sub[0], 10);
+        if (n >= 1 && n <= 7) shells[n - 1] += count;
+      }
+      let lastNonZero = shells.length - 1;
+      while (lastNonZero > 0 && shells[lastNonZero] === 0) {
+        lastNonZero--;
+      }
+      return shells.slice(0, lastNonZero + 1).map((count, idx) => ({
+        n: idx + 1,
+        letter: SHELL_LETTERS[idx],
+        count,
+        capacity: 2 * Math.pow(idx + 1, 2)
+      }));
+    }
+
+    function generateOrbitalBoxesForSubshell(subshellLabel, electronCount) {
+      const n = parseInt(subshellLabel[0], 10);
+      const type = subshellLabel[1];
+      const l = L_QUANTUM_NUMBER[type];
+      const numBoxes = SUBSHELL_BOXES[type];
+      const capacity = SUBSHELL_CAPACITY[type];
+      const validCount = Math.max(0, Math.min(electronCount, capacity));
+
+      const boxes = [];
+      for (let i = 0; i < numBoxes; i++) {
+        const ml = -l + i;
+        boxes.push({
+          index: i,
+          ml,
+          mlLabel: ml > 0 ? `+${ml}` : `${ml}`,
+          up: false,
+          down: false,
+          electrons: 0
+        });
+      }
+
+      let remaining = validCount;
+      for (let i = 0; i < numBoxes && remaining > 0; i++) {
+        boxes[i].up = true;
+        boxes[i].electrons += 1;
+        remaining--;
+      }
+      for (let i = 0; i < numBoxes && remaining > 0; i++) {
+        boxes[i].down = true;
+        boxes[i].electrons += 1;
+        remaining--;
+      }
+
+      const unpaired = boxes.reduce((acc, b) => acc + (b.up && !b.down ? 1 : 0), 0);
+      const paired = boxes.reduce((acc, b) => acc + (b.up && b.down ? 1 : 0), 0);
+
+      return {
+        subshell: subshellLabel,
+        n,
+        l,
+        type,
+        capacity,
+        electronCount: validCount,
+        boxes,
+        unpaired,
+        paired
+      };
+    }
+
+    function buildElectronSequence(subshellsMap) {
+      const sequence = [];
+      for (const sub of SUBSHELL_ORDER) {
+        const count = subshellsMap[sub] || 0;
+        if (count <= 0) continue;
+        const n = parseInt(sub[0], 10);
+        const type = sub[1];
+        const l = L_QUANTUM_NUMBER[type];
+        const numBoxes = SUBSHELL_BOXES[type];
+
+        for (let eIdx = 0; eIdx < count; eIdx++) {
+          const isSpinUp = eIdx < numBoxes;
+          const boxIndex = isSpinUp ? eIdx : eIdx - numBoxes;
+          const ml = -l + boxIndex;
+          const ms = isSpinUp ? '+1/2' : '-1/2';
+          sequence.push({
+            stepNumber: sequence.length + 1,
+            subshell: sub,
+            n,
+            l,
+            ml,
+            ms,
+            boxIndex,
+            spin: isSpinUp ? 'up' : 'down'
+          });
+        }
+      }
+      return sequence;
+    }
+
+    const ELEMENTS_DATABASE = RAW_ELEMENTS.map(([z, symbol, name, period, group, block, category, mass]) => {
+      const groundSubshells = computeGroundStateSubshells(z);
+      const isAnomalous = Boolean(ANOMALOUS_CONFIGS[z]);
+      const isSuperheavy = z >= 104;
+
+      let statusLabel = 'Standard Aufbau';
+      let statusNote = '';
+
+      if (isAnomalous) {
+        statusLabel = z >= 103 ? 'Relativistic Exception' : 'Aufbau Exception';
+        statusNote = ANOMALOUS_CONFIGS[z].reason;
+      } else if (isSuperheavy) {
+        statusLabel = 'Relativistic Superheavy';
+        statusNote =
+          z === 118
+            ? 'Predicted closed-shell [Rn] 7s² 5f¹⁴ 6d¹⁰ 7p⁶ with strong 7p spin-orbit splitting.'
+            : 'Ground state derived via relativistic Dirac-Fock calculations.';
+      }
+
+      const shells = computeShellDistribution(groundSubshells);
+      const orbitalDiagrams = SUBSHELL_ORDER
+        .filter((sub) => groundSubshells[sub] > 0)
+        .map((sub) => generateOrbitalBoxesForSubshell(sub, groundSubshells[sub]));
+
+      const totalUnpaired = orbitalDiagrams.reduce((acc, d) => acc + d.unpaired, 0);
+      const spinMultiplicity = totalUnpaired + 1;
+
+      return {
+        z,
+        symbol,
+        name,
+        period,
+        group,
+        block,
+        category,
+        mass,
+        groundSubshells,
+        isAnomalous,
+        isSuperheavy,
+        statusLabel,
+        statusNote,
+        fullConfigShell: formatConfigString(groundSubshells, 'shell'),
+        nobleConfigAufbau: formatNobleGasString(z, groundSubshells, 'aufbau'),
+        shells,
+        orbitalDiagrams,
+        totalUnpaired,
+        spinMultiplicity,
+        magneticCharacter: totalUnpaired > 0 ? 'Paramagnetic' : 'Diamagnetic'
+      };
+    });
+
+    const BLOCK_STYLES = {
+      s: {
+        name: 's-block',
+        darkTile: 'bg-[#2b1f24] border-[#523842] text-[#ffd9e2] hover:bg-[#3b2a31]',
+        lightTile: 'bg-[#fff0f3] border-[#f2ccd6] text-[#3e001d] hover:bg-[#ffe3ea]',
+        pillDark: 'bg-[#3b252d] text-[#ffb1c8]',
+        pillLight: 'bg-[#ffd9e2] text-[#3e001d]',
+        accent: '#f43f5e'
+      },
+      p: {
+        name: 'p-block',
+        darkTile: 'bg-[#192822] border-[#2f4f42] text-[#c4eed0] hover:bg-[#23382f]',
+        lightTile: 'bg-[#eefbf3] border-[#cce8d6] text-[#072711] hover:bg-[#dcf5e6]',
+        pillDark: 'bg-[#1f372b] text-[#a6f2c0]',
+        pillLight: 'bg-[#c4eed0] text-[#072711]',
+        accent: '#10b981'
+      },
+      d: {
+        name: 'd-block',
+        darkTile: 'bg-[#192431] border-[#2f455c] text-[#d3e3fd] hover:bg-[#233244]',
+        lightTile: 'bg-[#f0f5ff] border-[#cdddf8] text-[#041e49] hover:bg-[#e1ecfe]',
+        pillDark: 'bg-[#1e324a] text-[#a8c7fa]',
+        pillLight: 'bg-[#d3e3fd] text-[#041e49]',
+        accent: '#3b82f6'
+      },
+      f: {
+        name: 'f-block',
+        darkTile: 'bg-[#2a2317] border-[#524329] text-[#ffdf9e] hover:bg-[#382f1f]',
+        lightTile: 'bg-[#fef7ec] border-[#efe0c4] text-[#261900] hover:bg-[#faeed9]',
+        pillDark: 'bg-[#3d3017] text-[#fcbd00]',
+        pillLight: 'bg-[#ffdf9e] text-[#261900]',
+        accent: '#f59e0b'
+      }
+    };
+
+    const TRACE_PALETTE = [
+      '#38bdf8', '#f43f5e', '#10b981', '#f59e0b',
+      '#a855f7', '#ec4899', '#2dd4bf', '#facc15'
+    ];
+
+    function Interactive3DAtomSimulator({
+      element,
+      activeSubshellsMap,
+      activeShells,
+      isDark
+    }) {
+      const canvasRef = useRef(null);
+
+      const occupiedSubshellsList = useMemo(
+        () => SUBSHELL_ORDER.filter((s) => activeSubshellsMap[s] > 0),
+        [activeSubshellsMap]
+      );
+
+      const [selectedSubshell, setSelectedSubshell] = useState('valence');
+      const [selectedOrbitalIdx, setSelectedOrbitalIdx] = useState('all');
+      const [shellPlane, setShellPlane] = useState('XY');
+      const [simPlaying, setSimPlaying] = useState(true);
+
+      useEffect(() => {
+        setSelectedOrbitalIdx('all');
+      }, [element.z, selectedSubshell]);
+
+      const cameraRef = useRef({
+        rotX: 0.48,
+        rotY: -0.62,
+        zoom: 1.0,
+        isDragging: false,
+        lastX: 0,
+        lastY: 0
+      });
+
+      const targetSubshells = useMemo(() => {
+        if (
+          selectedSubshell !== 'all' &&
+          selectedSubshell !== 'valence' &&
+          activeSubshellsMap[selectedSubshell]
+        ) {
+          return [selectedSubshell];
+        }
+        if (selectedSubshell === 'all') {
+          return occupiedSubshellsList;
+        }
+        return occupiedSubshellsList.slice(-1);
+      }, [selectedSubshell, activeSubshellsMap, occupiedSubshellsList]);
+
+      const orbitalSurfaceFaces = useMemo(() => {
+        const allFaces = [];
+        for (const sub of targetSubshells) {
+          const n = parseInt(sub[0], 10);
+          const type = sub[1];
+          const l = L_QUANTUM_NUMBER[type];
+          const numBoxes = SUBSHELL_BOXES[type];
+          const count = activeSubshellsMap[sub] || 0;
+          const color = BLOCK_STYLES[type].accent;
+
+          for (let mIdx = 0; mIdx < numBoxes; mIdx++) {
+            if (selectedOrbitalIdx !== 'all') {
+              if (mIdx !== Number(selectedOrbitalIdx)) continue;
+            } else if (mIdx >= count) {
+              continue;
+            }
+
+            const meshFaces = buildOrbitalSurfaceMesh(n, l, mIdx, color);
+            for (let k = 0; k < meshFaces.length; k++) {
+              allFaces.push(meshFaces[k]);
+            }
+          }
+        }
+        return allFaces;
+      }, [targetSubshells, activeSubshellsMap, selectedOrbitalIdx]);
+
+      const electrons3D = useMemo(() => {
+        const list = [];
+        for (const sub of SUBSHELL_ORDER) {
+          const count = activeSubshellsMap[sub] || 0;
+          if (count <= 0) continue;
+          const n = parseInt(sub[0], 10);
+          const type = sub[1];
+          const l = L_QUANTUM_NUMBER[type];
+          const numBoxes = SUBSHELL_BOXES[type];
+
+          for (let i = 0; i < count; i++) {
+            const isUp = i < numBoxes;
+            const mIndex = isUp ? i : i - numBoxes;
+            const id = list.length;
+
+            const phaseA = (id * 2.3999632 + mIndex * 1.1) % (2 * Math.PI);
+            const phaseB = (id * 1.6180339 + n * 0.7) % (2 * Math.PI);
+
+            list.push({
+              id,
+              subshell: sub,
+              n,
+              l,
+              type,
+              mIndex,
+              spin: isUp ? '+1/2' : '-1/2',
+              phaseA,
+              phaseB,
+              color: TRACE_PALETTE[id % TRACE_PALETTE.length],
+              blockColor: BLOCK_STYLES[type].accent
+            });
+          }
+        }
+        return list;
+      }, [activeSubshellsMap]);
+
+      const timeRef = useRef(0);
+      const tracesRef = useRef({});
+
+      useEffect(() => {
+        tracesRef.current = {};
+      }, [element.z, selectedSubshell, selectedOrbitalIdx]);
+
+      const computeElectronPosition3D = useCallback((e, t) => {
+        const baseR = 26 + e.n * 22;
+        const w1 = (0.85 + (e.id % 5) * 0.12) * (e.spin === '+1/2' ? 1 : -1);
+        const w2 = 1.25 + (e.mIndex + 1) * 0.2;
+        const u = t * w1 + e.phaseA;
+        const v = t * w2 + e.phaseB;
+
+        if (e.l === 0) {
+          const r = baseR * 0.72;
+          return {
+            x: Math.sin(u) * Math.cos(v) * r,
+            y: Math.sin(u) * Math.sin(v) * r,
+            z: Math.cos(u) * r
+          };
+        }
+
+        const nx = Math.sin(u) * Math.cos(v * 0.75);
+        const ny = Math.sin(u) * Math.sin(v * 0.75);
+        const nz = Math.cos(u);
+        const yHarmonic = evalRealSphericalHarmonic(e.l, e.mIndex, nx, ny, nz);
+        const r = baseR * Math.max(0.18, Math.abs(yHarmonic) * 1.02);
+
+        return {
+          x: nx * r,
+          y: ny * r,
+          z: nz * r
+        };
+      }, []);
+
+      useEffect(() => {
+        let animFrameId;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        const project3D = (x, y, z, width, height, cam, maxShellN) => {
+          const qx = x;
+          const qy = -z;
+          const qz = y;
+
+          const cosY = Math.cos(cam.rotY);
+          const sinY = Math.sin(cam.rotY);
+          const x1 = qx * cosY - qz * sinY;
+          const z1 = qx * sinY + qz * cosY;
+
+          const cosX = Math.cos(cam.rotX);
+          const sinX = Math.sin(cam.rotX);
+          const y2 = qy * cosX - z1 * sinX;
+          const z2 = qy * sinX + z1 * cosX;
+
+          const autoFit = Math.max(0.68, 1.15 - maxShellN * 0.065);
+          const fov = 440 * cam.zoom * autoFit;
+          const viewerDist = 420;
+          const scale = fov / Math.max(80, viewerDist + z2);
+
+          return {
+            sx: width / 2 + x1 * scale,
+            sy: height / 2 + y2 * scale,
+            depth: z2,
+            scale
+          };
+        };
+
+        const renderFrame = () => {
+          const rect = canvas.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          if (
+            canvas.width !== Math.floor(rect.width * dpr) ||
+            canvas.height !== Math.floor(rect.height * dpr)
+          ) {
+            canvas.width = Math.floor(rect.width * dpr);
+            canvas.height = Math.floor(rect.height * dpr);
+          }
+
+          ctx.save();
+          ctx.scale(dpr, dpr);
+          const width = rect.width;
+          const height = rect.height;
+          const cam = cameraRef.current;
+          const maxShellN = activeShells.length || 1;
+
+          ctx.fillStyle = isDark ? '#101214' : '#f4f7fb';
+          ctx.fillRect(0, 0, width, height);
+
+          if (simPlaying) {
+            timeRef.current += 0.018;
+          }
+          const t = timeRef.current;
+
+          // 1. Cartesian Axes
+          const axisLen = 40 + maxShellN * 24;
+          const origin = project3D(0, 0, 0, width, height, cam, maxShellN);
+          const axesDef = [
+            { label: 'X', x: axisLen, y: 0, z: 0, color: '#ef4444' },
+            { label: 'Y', x: 0, y: axisLen, z: 0, color: '#10b981' },
+            { label: 'Z', x: 0, y: 0, z: axisLen, color: '#3b82f6' }
+          ];
+          axesDef.forEach((ax) => {
+            const pEnd = project3D(ax.x, ax.y, ax.z, width, height, cam, maxShellN);
+            ctx.beginPath();
+            ctx.moveTo(origin.sx, origin.sy);
+            ctx.lineTo(pEnd.sx, pEnd.sy);
+            ctx.strokeStyle = isDark ? `${ax.color}44` : `${ax.color}66`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = isDark ? `${ax.color}aa` : ax.color;
+            ctx.font = '600 10px "JetBrains Mono", monospace';
+            ctx.fillText(ax.label, pEnd.sx + 4, pEnd.sy + 3);
+          });
+
+          // 2. K-Q Shell Rings
+          const ringSegments = 64;
+          activeShells.forEach((sh) => {
+            const shellR = 26 + sh.n * 22;
+            ctx.save();
+            ctx.beginPath();
+
+            for (let s = 0; s <= ringSegments; s++) {
+              const ang = (s / ringSegments) * Math.PI * 2;
+              const c = Math.cos(ang) * shellR;
+              const sn = Math.sin(ang) * shellR;
+
+              let px = 0, py = 0, pz = 0;
+              if (shellPlane === 'XY') { px = c; py = sn; pz = 0; }
+              else if (shellPlane === 'YZ') { px = 0; py = c; pz = sn; }
+              else { px = c; py = 0; pz = sn; }
+
+              const pt = project3D(px, py, pz, width, height, cam, maxShellN);
+              if (s === 0) ctx.moveTo(pt.sx, pt.sy);
+              else ctx.lineTo(pt.sx, pt.sy);
+            }
+
+            ctx.setLineDash([3, 4]);
+            ctx.strokeStyle = isDark
+              ? 'rgba(168, 199, 250, 0.30)'
+              : 'rgba(11, 87, 208, 0.28)';
+            ctx.lineWidth = 1.15;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            let lx = 0, ly = 0, lz = 0;
+            if (shellPlane === 'XY') lx = shellR;
+            else if (shellPlane === 'YZ') ly = shellR;
+            else lz = shellR;
+
+            const labelPt = project3D(lx, ly, lz, width, height, cam, maxShellN);
+            ctx.fillStyle = isDark
+              ? 'rgba(227, 227, 227, 0.65)'
+              : 'rgba(31, 31, 31, 0.65)';
+            ctx.font = '500 9.5px "JetBrains Mono", monospace';
+            ctx.fillText(`${sh.letter}(${sh.count})`, labelPt.sx + 4, labelPt.sy - 2);
+            ctx.restore();
+          });
+
+          // 3. Orbital 3D Faces
+          const projectedFaces = orbitalSurfaceFaces.map((f) => {
+            const cProj = project3D(f.cx, f.cy, f.cz, width, height, cam, maxShellN);
+            const pVerts = f.verts.map((v) =>
+              project3D(v.x, v.y, v.z, width, height, cam, maxShellN)
+            );
+            return { ...f, pVerts, depth: cProj.depth };
+          });
+
+          projectedFaces.sort((a, b) => b.depth - a.depth);
+          const singleOrbitalMode = targetSubshells.length === 1 && selectedOrbitalIdx !== 'all';
+
+          for (let i = 0; i < projectedFaces.length; i++) {
+            const face = projectedFaces[i];
+            const pv = face.pVerts;
+            const lightDot = Math.abs(face.nx * 0.45 - face.ny * 0.35 + face.nz * 0.82);
+            const fillAlpha = 0.14 + 0.18 * lightDot;
+
+            ctx.beginPath();
+            ctx.moveTo(pv[0].sx, pv[0].sy);
+            ctx.lineTo(pv[1].sx, pv[1].sy);
+            ctx.lineTo(pv[2].sx, pv[2].sy);
+            ctx.lineTo(pv[3].sx, pv[3].sy);
+            ctx.closePath();
+
+            const baseHex = singleOrbitalMode
+              ? face.phaseSign > 0
+                ? '#38bdf8'
+                : '#f43f5e'
+              : face.color;
+
+            ctx.fillStyle = baseHex;
+            ctx.globalAlpha = fillAlpha;
+            ctx.fill();
+
+            ctx.strokeStyle = baseHex;
+            ctx.globalAlpha = fillAlpha * 0.55;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1.0;
+
+          // 4. Nucleus
+          ctx.beginPath();
+          ctx.arc(origin.sx, origin.sy, Math.max(4, 5.5 * origin.scale), 0, Math.PI * 2);
+          ctx.fillStyle = '#ef4444';
+          ctx.fill();
+          ctx.strokeStyle = isDark ? '#ffffff55' : '#00000033';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // 5. Electrons & Trails
+          const targetSubSet = new Set(targetSubshells);
+          const visibleElectrons = electrons3D.filter((e) => {
+            if (!targetSubSet.has(e.subshell)) return false;
+            if (
+              selectedOrbitalIdx !== 'all' &&
+              e.mIndex !== Number(selectedOrbitalIdx)
+            ) {
+              return false;
+            }
+            return true;
+          });
+
+          visibleElectrons.forEach((e) => {
+            const pos = computeElectronPosition3D(e, t);
+            if (!tracesRef.current[e.id]) {
+              tracesRef.current[e.id] = [];
+            }
+            const history = tracesRef.current[e.id];
+            if (simPlaying || history.length === 0) {
+              history.push(pos);
+              if (history.length > 48) {
+                history.shift();
+              }
+            }
+
+            if (history.length > 1) {
+              for (let k = 1; k < history.length; k++) {
+                const p0 = project3D(history[k - 1].x, history[k - 1].y, history[k - 1].z, width, height, cam, maxShellN);
+                const p1 = project3D(history[k].x, history[k].y, history[k].z, width, height, cam, maxShellN);
+                const age = k / history.length;
+                ctx.beginPath();
+                ctx.moveTo(p0.sx, p0.sy);
+                ctx.lineTo(p1.sx, p1.sy);
+                ctx.strokeStyle = e.color;
+                ctx.globalAlpha = age * 0.7;
+                ctx.lineWidth = Math.max(0.8, 2.0 * age * p1.scale);
+                ctx.lineCap = 'round';
+                ctx.stroke();
+              }
+              ctx.globalAlpha = 1.0;
+            }
+
+            const proj = project3D(pos.x, pos.y, pos.z, width, height, cam, maxShellN);
+            const r = Math.max(2.6, 3.6 * proj.scale);
+            ctx.beginPath();
+            ctx.arc(proj.sx, proj.sy, r, 0, Math.PI * 2);
+            ctx.fillStyle = e.color;
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 0.9;
+            ctx.stroke();
+          });
+
+          ctx.restore();
+          animFrameId = requestAnimationFrame(renderFrame);
+        };
+
+        animFrameId = requestAnimationFrame(renderFrame);
+        return () => cancelAnimationFrame(animFrameId);
+      }, [
+        isDark,
+        simPlaying,
+        shellPlane,
+        activeShells,
+        orbitalSurfaceFaces,
+        targetSubshells,
+        selectedOrbitalIdx,
+        electrons3D,
+        computeElectronPosition3D
+      ]);
+
+      const handlePointerDown = (e) => {
+        const rect = canvasRef.current.getBoundingClientRect();
+        cameraRef.current.isDragging = true;
+        cameraRef.current.lastX = e.clientX - rect.left;
+        cameraRef.current.lastY = e.clientY - rect.top;
+      };
+
+      const handlePointerMove = (e) => {
+        if (!cameraRef.current.isDragging) return;
+        const rect = canvasRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const dx = x - cameraRef.current.lastX;
+        const dy = y - cameraRef.current.lastY;
+
+        cameraRef.current.rotY += dx * 0.0085;
+        cameraRef.current.rotX = Math.max(
+          -Math.PI / 2 + 0.05,
+          Math.min(Math.PI / 2 - 0.05, cameraRef.current.rotX + dy * 0.0085)
+        );
+        cameraRef.current.lastX = x;
+        cameraRef.current.lastY = y;
+      };
+
+      const handlePointerUp = () => {
+        cameraRef.current.isDragging = false;
+      };
+
+      const handleWheel = (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        cameraRef.current.zoom = Math.max(0.5, Math.min(2.4, cameraRef.current.zoom * delta));
+      };
+
+      const handleResetCamera = () => {
+        cameraRef.current.rotX = 0.48;
+        cameraRef.current.rotY = -0.62;
+        cameraRef.current.zoom = 1.0;
+      };
+
+      const activeSubshellOrbitals = useMemo(() => {
+        const activeSub = targetSubshells.length === 1 ? targetSubshells[0] : null;
+        if (!activeSub) return [];
+        const type = activeSub[1];
+        return ORBITAL_LABELS[type] || [];
+      }, [targetSubshells]);
+
+      const currentOrbitalDescription = useMemo(() => {
+        const activeSub = targetSubshells.length === 1 ? targetSubshells[0] : null;
+        if (!activeSub) {
+          return 'Translucent 3D spherical harmonic orbital surfaces with planar K–Q shell guides.';
+        }
+        const type = activeSub[1];
+        if (selectedOrbitalIdx === 'all') {
+          return ORBITAL_DESCRIPTIONS[type] || `3D ${activeSub} orbital geometry.`;
+        }
+        const label = ORBITAL_LABELS[type]?.[Number(selectedOrbitalIdx)];
+        return ORBITAL_DESCRIPTIONS[label] || `3D ${activeSub} (${label}) orbital.`;
+      }, [targetSubshells, selectedOrbitalIdx]);
+
+      return (
+        <div className="flex flex-col h-full justify-between space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">3D Orbital Geometry</h3>
+              <select
+                value={selectedSubshell}
+                onChange={(e) => setSelectedSubshell(e.target.value)}
+                className={`px-2.5 py-1 rounded-xl border text-xs font-mono ${
+                  isDark
+                    ? 'bg-[#131314] border-[#2d2f31] text-[#e3e3e3]'
+                    : 'bg-[#f8fafd] border-[#dde3ea] text-[#1f1f1f]'
+                }`}
+              >
+                <option value="valence">
+                  Valence ({occupiedSubshellsList[occupiedSubshellsList.length - 1]})
+                </option>
+                <option value="all">All Subshells</option>
+                {occupiedSubshellsList.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub} ({activeSubshellsMap[sub]} e⁻)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] font-mono opacity-55 mr-1">Plane:</span>
+              {['XY', 'YZ', 'ZX'].map((pl) => (
+                <button
+                  key={pl}
+                  type="button"
+                  onClick={() => setShellPlane(pl)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-medium transition-colors ${
+                    shellPlane === pl
+                      ? isDark
+                        ? 'bg-[#a8c7fa] text-[#041e49]'
+                        : 'bg-[#0b57d0] text-white'
+                      : isDark
+                      ? 'bg-[#131314] text-[#c4c7c5] hover:bg-[#282a2c]'
+                      : 'bg-[#f0f4f9] text-[#444746] hover:bg-[#e1e6ec]'
+                  }`}
+                >
+                  {pl}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {targetSubshells.length === 1 && activeSubshellOrbitals.length > 1 && (
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedOrbitalIdx('all')}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-mono border transition-colors ${
+                  selectedOrbitalIdx === 'all'
+                    ? isDark
+                      ? 'bg-[#a8c7fa] text-[#041e49] border-transparent'
+                      : 'bg-[#0b57d0] text-white border-transparent'
+                    : isDark
+                    ? 'bg-[#131314] border-[#2d2f31] text-[#c4c7c5]'
+                    : 'bg-[#f8fafd] border-[#dde3ea] text-[#444746]'
+                }`}
+              >
+                All {targetSubshells[0]}
+              </button>
+              {activeSubshellOrbitals.map((orbLabel, idx) => (
+                <button
+                  key={orbLabel}
+                  type="button"
+                  onClick={() => setSelectedOrbitalIdx(idx)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-mono border transition-colors ${
+                    Number(selectedOrbitalIdx) === idx
+                      ? isDark
+                        ? 'bg-[#a8c7fa] text-[#041e49] border-transparent'
+                        : 'bg-[#0b57d0] text-white border-transparent'
+                      : isDark
+                      ? 'bg-[#131314] border-[#2d2f31] text-[#c4c7c5]'
+                      : 'bg-[#f8fafd] border-[#dde3ea] text-[#444746]'
+                  }`}
+                >
+                  {targetSubshells[0][0]}{orbLabel}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div
+            className={`relative rounded-2xl border overflow-hidden select-none flex-1 min-h-[380px] ${
+              isDark ? 'bg-[#101214] border-[#2d2f31]' : 'bg-[#f4f7fb] border-[#dde3ea]'
+            }`}
+          >
+            <canvas
+              ref={canvasRef}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              onWheel={handleWheel}
+              className="w-full h-full block cursor-grab active:cursor-grabbing touch-none"
+            />
+
+            <div className="absolute top-3 right-3 flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSimPlaying(!simPlaying)}
+                className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono flex items-center gap-1 backdrop-blur-md ${
+                  isDark
+                    ? 'bg-[#131314]/80 border-[#2d2f31] text-[#e3e3e3]'
+                    : 'bg-white/85 border-[#dde3ea] text-[#1f1f1f]'
+                }`}
+              >
+                {simPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                <span>{simPlaying ? 'Pause' : 'Play'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleResetCamera}
+                className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono backdrop-blur-md ${
+                  isDark
+                    ? 'bg-[#131314]/80 border-[#2d2f31] text-[#e3e3e3]'
+                    : 'bg-white/85 border-[#dde3ea] text-[#1f1f1f]'
+                }`}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <p className="text-[11px] opacity-60 leading-relaxed">
+            {currentOrbitalDescription}
+          </p>
+        </div>
+      );
+    }
+
+    function SubshellOrbitalCard({ diagram, isHighlighted, isDark }) {
+      const { subshell, capacity, electronCount, boxes, unpaired } = diagram;
+
+      return (
+        <div
+          className={`rounded-2xl border p-3.5 transition-colors ${
+            isHighlighted
+              ? isDark
+                ? 'bg-[#1b2636] border-[#a8c7fa]'
+                : 'bg-[#e8f0fe] border-[#0b57d0]'
+              : isDark
+              ? 'bg-[#1a1c1e] border-[#2d2f31]'
+              : 'bg-[#f8fafd] border-[#e3e8ef]'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-mono font-semibold tracking-tight">
+                {subshell}{toSuperscript(electronCount)}
+              </span>
+              {isHighlighted && (
+                <span
+                  className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
+                    isDark ? 'bg-[#a8c7fa] text-[#041e49]' : 'bg-[#0b57d0] text-white'
+                  }`}
+                >
+                  Active
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-[11px] font-mono opacity-65">
+              <span>{electronCount}/{capacity} e⁻</span>
+              {unpaired > 0 && <span>· {unpaired}↑</span>}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {boxes.map((box) => {
+              const isPaired = box.up && box.down;
+              const isSingle = box.up && !box.down;
+
+              let boxStyle = isDark
+                ? 'bg-[#131314] border-[#2d2f31] text-[#5e5e5e]'
+                : 'bg-white border-[#dde3ea] text-[#94a3b8]';
+
+              if (isPaired) {
+                boxStyle = isDark
+                  ? 'bg-[#15251d] border-[#2e523e] text-[#c4eed0]'
+                  : 'bg-[#eefbf3] border-[#b7e1c6] text-[#0d652d]';
+              } else if (isSingle) {
+                boxStyle = isDark
+                  ? 'bg-[#2a2112] border-[#594420] text-[#ffdf9e]'
+                  : 'bg-[#fef7ec] border-[#f2d49b] text-[#b06000]';
+              }
+
+              return (
+                <div key={box.index} className="flex flex-col items-center">
+                  <div
+                    className={`w-9 h-9 rounded-lg border flex items-center justify-center gap-0.5 font-mono text-sm font-medium select-none transition-colors ${boxStyle}`}
+                    title={`${subshell} (m_l = ${box.mlLabel})`}
+                  >
+                    {box.up && <span>↑</span>}
+                    {box.down && <span className="opacity-85">↓</span>}
+                    {!box.up && !box.down && <span className="text-xs opacity-40">·</span>}
+                  </div>
+                  <span className={`mt-1 text-[10px] font-mono ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{box.mlLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function PeriodicSubshellBlockMap({ isDark }) {
+      const borderCol = isDark ? 'border-[#2d3238]' : 'border-[#cbd5e1]';
+      const cellEven = isDark ? 'bg-[#16181b]' : 'bg-[#f8fafc]';
+      const cellOdd = isDark ? 'bg-[#1c1f24]' : 'bg-[#f1f5f9]';
+      const groupNumCol = 'text-[10px] font-mono opacity-50 text-center';
+
+      // Consistent app-wide block badge styles
+      const badgeStyles = {
+        core: 'bg-[#be185d] text-white border-[#db2777]',
+        s: 'bg-[#e11d48] text-white border-[#f43f5e]',
+        d: 'bg-[#2563eb] text-white border-[#3b82f6]',
+        p: 'bg-[#059669] text-white border-[#10b981]',
+        f: 'bg-[#d97706] text-white border-[#f59e0b]'
+      };
+
+      // Clean SVG Span Bar with inward arrows: |---> [ badge ] <---|
+      const SpanBadgeRow = ({ label, blockType, cols, bgClass, notchType = null }) => {
+        const lineStroke = isDark ? '#64748b' : '#64748b';
+        return (
+          <div className={`relative h-10 border-b border-x ${borderCol} ${bgClass} flex items-center justify-center px-2 overflow-hidden`}>
+            {/* Subtle vertical column grid dividers */}
+            <div
+              className="absolute inset-0 grid pointer-events-none"
+              style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+            >
+              {Array.from({ length: cols - 1 }).map((_, i) => (
+                <div key={i} className={`border-r ${isDark ? 'border-[#2d3238]/60' : 'border-[#cbd5e1]/65'}`} />
+              ))}
+            </div>
+
+            {/* Optional Lanthanide / Actinide branch bar in Group 3 */}
+            {notchType === '4f' && (
+              <div
+                className="absolute left-[10%] -translate-x-1/2 top-1 bottom-1 w-1.5 rounded-full bg-[#f59e0b] shadow-sm z-20"
+                title="4f Lanthanide series branches here after 6s²"
+              />
+            )}
+            {notchType === '5f' && (
+              <div
+                className="absolute left-[10%] -translate-x-1/2 top-1 bottom-1 w-1.5 rounded-full bg-[#ec4899] shadow-sm z-20"
+                title="5f Actinide series branches here after 7s²"
+              />
+            )}
+
+            {/* Left Arrow -> Badge <- Right Arrow */}
+            <div className="w-full flex items-center justify-between gap-1.5 relative z-10">
+              <div className="flex-1 flex items-center">
+                <div className="w-full h-[1.5px]" style={{ backgroundColor: lineStroke }} />
+                <svg className="w-2.5 h-2.5 -ml-1 shrink-0" viewBox="0 0 10 10" fill="none">
+                  <path d="M1 1L8 5L1 9" stroke={lineStroke} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+
+              <span className={`px-3 py-0.5 rounded-md font-mono font-bold text-xs border shadow-sm shrink-0 ${badgeStyles[blockType]}`}>
+                {label}
+              </span>
+
+              <div className="flex-1 flex items-center">
+                <svg className="w-2.5 h-2.5 -mr-1 shrink-0" viewBox="0 0 10 10" fill="none">
+                  <path d="M9 1L2 5L9 9" stroke={lineStroke} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div className="w-full h-[1.5px]" style={{ backgroundColor: lineStroke }} />
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const PERIOD_NUMBERS = [1, 2, 3, 4, 5, 6, 7];
+
+      return (
+        <div className="select-none">
+          {/* Scrollable Diagram Container */}
+          <div className="overflow-x-auto pb-1">
+            <div className="min-w-[860px] space-y-5">
+              {/* TOP TABLE: Periods + s-block (1-2) + d-block (3-12) + p-block (13-18) */}
+              <div className="grid grid-cols-[32px_12px_96px_420px_276px] items-stretch">
+                {/* 1. Periods Column - matching main periodic table style */}
+                <div className="flex flex-col">
+                  <div className="h-8 text-[10px] font-mono opacity-40 text-center" />
+                  {PERIOD_NUMBERS.map((num) => (
+                    <div
+                      key={num}
+                      className="h-10 flex items-center justify-center text-[11px] font-mono opacity-45 text-center"
+                    >
+                      {num}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Spacer gap between Periods column and Group 1 */}
+                <div />
+
+                {/* 2. s-Block (Groups 1 & 2) */}
+                <div className="flex flex-col">
+                  {/* Group Headers 1 & 2 */}
+                  <div className="h-8 grid grid-cols-2 items-end pb-1.5 text-center">
+                    <span className={groupNumCol}>1</span>
+                    <span className={groupNumCol}>2</span>
+                  </div>
+
+                  {/* Period 1: 1s¹ in Group 1 */}
+                  <div className="h-10 grid grid-cols-2">
+                    <div className={`border ${borderCol} rounded-tl-lg flex items-center justify-center font-mono font-bold text-xs ${badgeStyles.core}`}>
+                      1s¹
+                    </div>
+                    <div className={`border-b ${borderCol}`} />
+                  </div>
+
+                  {/* Period 2: Individual 2s¹ and 2s² cells */}
+                  <div className={`h-10 grid grid-cols-2 border-b border-x ${borderCol} ${cellOdd} font-mono font-semibold text-xs`}>
+                    <div className={`border-r ${borderCol} flex items-center justify-center ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                      2s¹
+                    </div>
+                    <div className={`flex items-center justify-center ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                      2s²
+                    </div>
+                  </div>
+
+                  {/* Periods 3 to 7: 3s, 4s, 5s, 6s, 7s span bars */}
+                  {['3s', '4s', '5s', '6s', '7s'].map((sub, i) => (
+                    <div key={sub} className={i === 4 ? 'rounded-b-lg overflow-hidden' : ''}>
+                      <SpanBadgeRow
+                        label={sub}
+                        blockType="s"
+                        cols={2}
+                        bgClass={i % 2 === 0 ? cellEven : cellOdd}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* 3. d-Block (Groups 3–12) */}
+                <div className="flex flex-col">
+                  {/* Spacer for Periods 1–2 */}
+                  <div className="h-8" />
+                  <div className="h-10" />
+                  <div className="h-10" />
+
+                  {/* Period 3 space holds Group 3..12 numbers right above Period 4 */}
+                  <div className={`h-10 grid grid-cols-10 items-end pb-1.5 text-center border-b ${borderCol}`}>
+                    {[3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                      <span key={g} className={groupNumCol}>
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Periods 4 to 7: 3d, 4d, 5d, 6d span bars */}
+                  <SpanBadgeRow label="3d" blockType="d" cols={10} bgClass={cellOdd} />
+                  <SpanBadgeRow label="4d" blockType="d" cols={10} bgClass={cellEven} />
+                  <SpanBadgeRow label="5d" blockType="d" cols={10} bgClass={cellOdd} notchType="4f" />
+                  <SpanBadgeRow label="6d" blockType="d" cols={10} bgClass={cellEven} notchType="5f" />
+                </div>
+
+                {/* 4. p-Block (Groups 13–18) */}
+                <div className="flex flex-col">
+                  {/* Group 18 header above Helium */}
+                  <div className="h-8 grid grid-cols-6 items-end pb-1.5 text-center">
+                    <div className="col-span-5" />
+                    <span className={groupNumCol}>18</span>
+                  </div>
+
+                  {/* Period 1 row: Groups 13–17 numbers sit above Period 2; 1s² box in Group 18 */}
+                  <div className="h-10 grid grid-cols-6">
+                    {[13, 14, 15, 16, 17].map((g) => (
+                      <div
+                        key={g}
+                        className={`flex items-end justify-center pb-1.5 border-b ${borderCol} ${groupNumCol}`}
+                      >
+                        {g}
+                      </div>
+                    ))}
+                    <div className={`border ${borderCol} rounded-t-lg flex items-center justify-center font-mono font-bold text-xs ${badgeStyles.core}`}>
+                      1s²
+                    </div>
+                  </div>
+
+                  {/* Period 2: Individual 2p¹ through 2p⁶ cells */}
+                  <div className={`h-10 grid grid-cols-6 border-b border-x ${borderCol} ${cellOdd} font-mono font-semibold text-xs`}>
+                    {['2p¹', '2p²', '2p³', '2p⁴', '2p⁵', '2p⁶'].map((pLbl, idx) => (
+                      <div
+                        key={pLbl}
+                        className={`flex items-center justify-center ${
+                          idx < 5 ? `border-r ${borderCol}` : ''
+                        } ${isDark ? 'text-slate-200' : 'text-slate-800'}`}
+                      >
+                        {pLbl}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Periods 3 to 7: 3p, 4p, 5p, 6p, 7p span bars */}
+                  {['3p', '4p', '5p', '6p', '7p'].map((sub, i) => (
+                    <div key={sub} className={i === 4 ? 'rounded-br-lg overflow-hidden' : ''}>
+                      <SpanBadgeRow
+                        label={sub}
+                        blockType="p"
+                        cols={6}
+                        bgClass={i % 2 === 0 ? cellEven : cellOdd}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* BOTTOM DETACHED f-BLOCK (4f & 5f, 14 columns) WITH CURVED BRANCH ARROWS */}
+              <div className="relative pl-[140px] pr-6 pt-1">
+                {/* Curved branch paths from Period 6 (5d) and Period 7 (6d) notches */}
+                <svg
+                  className="absolute left-[110px] -top-[82px] w-[140px] h-[165px] pointer-events-none z-20 overflow-visible"
+                  viewBox="0 0 140 165"
+                  fill="none"
+                >
+                  {/* 4f branch curve from Period 6 notch */}
+                  <path
+                    d="M 118 22 C 62 35, 38 72, 42 104"
+                    stroke="#f59e0b"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 37 98 L 42 105 L 47 98"
+                    stroke="#f59e0b"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* 5f branch curve from Period 7 notch */}
+                  <path
+                    d="M 118 62 C 74 78, 56 112, 58 144"
+                    stroke="#ec4899"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 53 138 L 58 145 L 63 138"
+                    stroke="#ec4899"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+
+                <div className="flex items-center gap-2 max-w-[690px]">
+                  {/* 4f & 5f Period indicators matching main periodic table style */}
+                  <div className="w-8 flex flex-col justify-around h-20 text-[10px] font-mono opacity-45 text-center">
+                    <div>4f</div>
+                    <div>5f</div>
+                  </div>
+
+                  <div className={`border-t ${borderCol} rounded-xl overflow-hidden flex-1 shadow-sm`}>
+                    {/* 4f row (14 columns) */}
+                    <SpanBadgeRow
+                      label="4f"
+                      blockType="f"
+                      cols={14}
+                      bgClass={isDark ? 'bg-[#1a2421]' : 'bg-[#ecfdf5]'}
+                    />
+                    {/* 5f row (14 columns) */}
+                    <SpanBadgeRow
+                      label="5f"
+                      blockType="f"
+                      cols={14}
+                      bgClass={isDark ? 'bg-[#281b24]' : 'bg-[#fdf2f8]'}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function QuantumTheoryView({ isDark, onSelectElementInSimulator }) {
+      const cardClass = `rounded-3xl border p-5 sm:p-6 ${
+        isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#dde3ea] shadow-sm'
+      }`;
+      const subCardClass = `rounded-2xl border p-4 ${
+        isDark ? 'bg-[#131314] border-[#2d2f31]' : 'bg-[#f8fafd] border-[#dde3ea]'
+      }`;
+      const tableBorder = isDark ? 'border-[#2d2f31]' : 'border-[#d0d7de]';
+
+      const FILLING_RULES = [
+        {
+          title: '1. Aufbau Principle & (n + l) Rule',
+          summary: 'Electrons occupy orbitals in order of increasing energy governed by (n + l):',
+          points: [
+            'Lower (n + l) means lower orbital energy and fills first (4s [4+0=4] fills before 3d [3+2=5]).',
+            'If two subshells share equal (n + l), the one with lower n fills first (3d [3+2=5] before 4p [4+1=5]).'
+          ]
+        },
+        {
+          title: '2. Pauli Exclusion Principle',
+          summary: 'No two electrons in an atom can share the exact same set of four quantum numbers (n, l, mₗ, mₛ).',
+          points: [
+            'Each atomic orbital (n, l, mₗ) holds at most 2 electrons.',
+            'Two electrons in the same orbital box must have opposite spins: +½ (↑) and −½ (↓).'
+          ]
+        },
+        {
+          title: "3. Hund's Rule of Maximum Multiplicity",
+          summary: 'In degenerate orbitals (p, d, f), pairing does not start until each orbital in that subshell is singly occupied.',
+          points: [
+            'Singly occupied orbitals adopt parallel spins (all ↑) to maximize exchange energy.',
+            'Half-filled (d⁵, f⁷) and fully-filled (d¹⁰, f¹⁴) subshells gain extra stabilization.'
+          ]
+        }
+      ];
+
+      const KEY_EXCEPTIONS = [
+        { z: 24, sym: 'Cr', expected: '[Ar] 4s² 3d⁴', actual: '[Ar] 4s¹ 3d⁵', tag: 'Half-filled 3d⁵' },
+        { z: 29, sym: 'Cu', expected: '[Ar] 4s² 3d⁹', actual: '[Ar] 4s¹ 3d¹⁰', tag: 'Fully-filled 3d¹⁰' },
+        { z: 42, sym: 'Mo', expected: '[Kr] 5s² 4d⁴', actual: '[Kr] 5s¹ 4d⁵', tag: 'Half-filled 4d⁵' },
+        { z: 46, sym: 'Pd', expected: '[Kr] 5s² 4d⁸', actual: '[Kr] 4d¹⁰', tag: 'Double promotion 4d¹⁰' },
+        { z: 47, sym: 'Ag', expected: '[Kr] 5s² 4d⁹', actual: '[Kr] 5s¹ 4d¹⁰', tag: 'Fully-filled 4d¹⁰' },
+        { z: 57, sym: 'La', expected: '[Xe] 6s² 4f¹', actual: '[Xe] 6s² 5d¹', tag: '5d lower than 4f' },
+        { z: 64, sym: 'Gd', expected: '[Xe] 6s² 4f⁸', actual: '[Xe] 6s² 4f⁷ 5d¹', tag: 'Half-filled 4f⁷' },
+        { z: 78, sym: 'Pt', expected: '[Xe] 6s² 4f¹⁴ 5d⁸', actual: '[Xe] 6s¹ 4f¹⁴ 5d⁹', tag: 'Relativistic 6s¹' },
+        { z: 79, sym: 'Au', expected: '[Xe] 6s² 4f¹⁴ 5d⁹', actual: '[Xe] 6s¹ 4f¹⁴ 5d¹⁰', tag: 'Closed 5d¹⁰ + Relativistic' },
+        { z: 103, sym: 'Lr', expected: '[Rn] 7s² 5f¹⁴ 6d¹', actual: '[Rn] 7s² 5f¹⁴ 7p¹', tag: 'Relativistic 7p₁/₂ split' }
+      ];
+
+      return (
+        <div className="space-y-5">
+          {/* SECTION 1: THE FOUR QUANTUM NUMBERS */}
+          <section className={cardClass}>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div>
+                <h2 className={`text-lg sm:text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  The Four Quantum Numbers (n, l, mₗ, mₛ)
+                </h2>
+                <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Complete quantum-mechanical address of an electron in an atom
+                </p>
+              </div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                  isDark ? 'bg-[#131314] border border-[#2d2f31] text-[#a8c7fa]' : 'bg-[#e8f0fe] border border-[#c2d7fe] text-[#0b57d0]'
+                }`}
+              >
+                ψ(n, l, mₗ) · mₛ
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Principal Quantum No. (n) */}
+              <div className={`${subCardClass} flex flex-col justify-between space-y-3`}>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className={`text-sm font-bold ${isDark ? 'text-[#a8c7fa]' : 'text-[#0b57d0]'}`}>
+                      Principal Quantum No. (n)
+                    </h3>
+                    <span className={`text-xs font-mono px-2 py-0.5 rounded font-semibold ${isDark ? 'bg-sky-500/10 text-sky-400' : 'bg-sky-100 text-sky-800'}`}>
+                      n = 1, 2, 3, 4…
+                    </span>
+                  </div>
+                  <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Determines the principal energy shell, orbital size, and average distance of the electron from the nucleus.
+                  </p>
+
+                  <div className="overflow-x-auto pt-1">
+                    <table className="w-full text-xs font-mono border-collapse">
+                      <thead>
+                        <tr className={`border-b ${tableBorder} ${isDark ? 'text-slate-400' : 'text-slate-700 font-bold'}`}>
+                          <th className="py-2 px-3 text-left">n (Shell)</th>
+                          <th className="py-2 px-3 text-left">Subshells Present</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { n: '1 (K)', subs: 's' },
+                          { n: '2 (L)', subs: 's   p' },
+                          { n: '3 (M)', subs: 's   p   d' },
+                          { n: '4 (N)', subs: 's   p   d   f' }
+                        ].map((row) => (
+                          <tr key={row.n} className={`border-b last:border-0 ${tableBorder}`}>
+                            <td className={`py-2 px-3 font-semibold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{row.n}</td>
+                            <td className={`py-2 px-3 tracking-widest font-semibold ${isDark ? 'text-[#a8c7fa]' : 'text-[#0b57d0]'}`}>
+                              {row.subs}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className={`pt-2.5 border-t ${tableBorder} grid grid-cols-2 gap-2 font-mono text-xs`}>
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <span className={`block text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Orbitals in Shell</span>
+                    <span className={`font-bold ${isDark ? 'text-sky-400' : 'text-sky-700'}`}>= n²</span>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <span className={`block text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Max e⁻ in Shell</span>
+                    <span className={`font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>= 2n²</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Azimuthal Quantum No. (l) */}
+              <div className={`${subCardClass} flex flex-col justify-between space-y-3`}>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className={`text-sm font-bold ${isDark ? 'text-[#a8c7fa]' : 'text-[#0b57d0]'}`}>
+                      Azimuthal Quantum No. (l)
+                    </h3>
+                    <span className={`text-xs font-mono px-2 py-0.5 rounded font-semibold ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-100 text-emerald-800'}`}>
+                      l = 0 … (n − 1)
+                    </span>
+                  </div>
+                  <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Defines the subshell, 3D geometric shape of the orbital, and orbital angular momentum <span className="font-mono font-semibold">ℏ√(l(l+1))</span>.
+                  </p>
+
+                  <div className="overflow-x-auto pt-1">
+                    <table className="w-full text-xs font-mono border-collapse">
+                      <thead>
+                        <tr className={`border-b ${tableBorder} ${isDark ? 'text-slate-400' : 'text-slate-700 font-bold'}`}>
+                          <th className="py-2 px-3 text-left">Value of l</th>
+                          <th className="py-2 px-3 text-left">Subshell</th>
+                          <th className="py-2 px-3 text-left">3D Shape</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { l: 0, sub: 's (Sharp)', shape: 'Spherical', colorDark: '#f43f5e', colorLight: '#e11d48' },
+                          { l: 1, sub: 'p (Principal)', shape: 'Dumbbell (2 lobes)', colorDark: '#10b981', colorLight: '#059669' },
+                          { l: 2, sub: 'd (Diffuse)', shape: 'Cloverleaf (4 lobes)', colorDark: '#3b82f6', colorLight: '#2563eb' },
+                          { l: 3, sub: 'f (Fundamental)', shape: 'Complex (6/8 lobes)', colorDark: '#f59e0b', colorLight: '#d97706' }
+                        ].map((row) => (
+                          <tr key={row.l} className={`border-b last:border-0 ${tableBorder}`}>
+                            <td className={`py-2 px-3 font-bold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{row.l}</td>
+                            <td className="py-2 px-3 font-semibold" style={{ color: isDark ? row.colorDark : row.colorLight }}>
+                              {row.sub}
+                            </td>
+                            <td className={`py-2 px-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{row.shape}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className={`pt-2.5 border-t ${tableBorder} grid grid-cols-2 gap-2 font-mono text-xs`}>
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <span className={`block text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Orbitals in Subshell</span>
+                    <span className={`font-bold ${isDark ? 'text-sky-400' : 'text-sky-700'}`}>= 2l + 1</span>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <span className={`block text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Max e⁻ in Subshell</span>
+                    <span className={`font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>= 2(2l + 1)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Magnetic Quantum No. (m_l) */}
+            <div className={`${subCardClass} mt-4 space-y-3`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className={`text-sm font-bold ${isDark ? 'text-[#a8c7fa]' : 'text-[#0b57d0]'}`}>
+                    Magnetic Quantum No. (mₗ)
+                  </h3>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Specifies the 3D spatial orientation of degenerate orbitals along Cartesian axes (X, Y, Z).
+                  </p>
+                </div>
+                <span className={`text-xs font-mono px-2.5 py-1 rounded font-semibold ${isDark ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-100 text-amber-800'}`}>
+                  mₗ = −l … 0 … +l
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs font-mono border-collapse">
+                  <thead>
+                    <tr className={`border-b ${tableBorder} ${isDark ? 'text-slate-400' : 'text-slate-700 font-bold'}`}>
+                      <th className="py-2.5 px-3 text-left">Subshell</th>
+                      <th className="py-2.5 px-3 text-center">l</th>
+                      <th className="py-2.5 px-3 text-center">mₗ Values (−l … +l)</th>
+                      <th className="py-2.5 px-3 text-center">Orbitals (2l+1)</th>
+                      <th className="py-2.5 px-3 text-left">3D Orientations</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { sub: 's (sharp)', l: 0, ml: '0', count: 1, orbs: 's', colorDark: '#f43f5e', colorLight: '#e11d48' },
+                      { sub: 'p (principal)', l: 1, ml: '−1, 0, +1', count: 3, orbs: 'p_x, p_z, p_y', colorDark: '#10b981', colorLight: '#059669' },
+                      { sub: 'd (diffuse)', l: 2, ml: '−2, −1, 0, +1, +2', count: 5, orbs: 'd_xy, d_yz, d_z², d_xz, d_x²−y²', colorDark: '#3b82f6', colorLight: '#2563eb' },
+                      { sub: 'f (fundamental)', l: 3, ml: '−3, −2, −1, 0, +1, +2, +3', count: 7, orbs: 'f_z³, f_xz², f_yz², f_xyz, f_z(x²−y²), f_x(x²−3y²), f_y(3x²−y²)', colorDark: '#f59e0b', colorLight: '#d97706' }
+                    ].map((r) => (
+                      <tr key={r.sub} className={`border-b last:border-0 ${tableBorder}`}>
+                        <td className="py-2 px-3 font-semibold" style={{ color: isDark ? r.colorDark : r.colorLight }}>{r.sub}</td>
+                        <td className={`py-2 px-3 text-center font-bold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{r.l}</td>
+                        <td className={`py-2 px-3 text-center ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{r.ml}</td>
+                        <td className={`py-2 px-3 text-center font-bold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{r.count}</td>
+                        <td className={`py-2 px-3 font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{r.orbs}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Spin Quantum No. & Wavefunction Nodes */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+              <div className={`lg:col-span-6 ${subCardClass} flex flex-col justify-between space-y-2.5`}>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className={`text-sm font-bold ${isDark ? 'text-[#a8c7fa]' : 'text-[#0b57d0]'}`}>Spin Quantum No. (mₛ)</h3>
+                  <span className={`text-xs font-mono px-2 py-0.5 rounded font-semibold ${isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-100 text-rose-800'}`}>
+                    mₛ = +½ (↑) or −½ (↓)
+                  </span>
+                </div>
+                <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                  Intrinsic spin angular momentum orientation of an electron (spin-up ↑ or spin-down ↓).
+                </p>
+                <div className="grid grid-cols-2 gap-2 font-mono text-xs pt-1">
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <div className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Total Spin (S)</div>
+                    <div className={`text-sm font-bold mt-0.5 ${isDark ? 'text-sky-400' : 'text-sky-700'}`}>½ × (unpaired e⁻)</div>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <div className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Spin Multiplicity</div>
+                    <div className={`text-sm font-bold mt-0.5 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>2S + 1</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`lg:col-span-6 ${subCardClass} flex flex-col justify-between space-y-2.5`}>
+                <div>
+                  <h3 className={`text-sm font-bold ${isDark ? 'text-[#a8c7fa]' : 'text-[#0b57d0]'}`}>Nodal Surfaces & Wavefunction Nodes</h3>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Regions where electron probability density drops to zero (|ψ|² = 0).</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 font-mono text-xs">
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <div className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Radial Nodes</div>
+                    <div className={`text-sm font-bold mt-0.5 ${isDark ? 'text-sky-400' : 'text-sky-700'}`}>n − l − 1</div>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <div className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Angular Nodes</div>
+                    <div className={`text-sm font-bold mt-0.5 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>l</div>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#d0d7de]'}`}>
+                    <div className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Total Nodes</div>
+                    <div className={`text-sm font-bold mt-0.5 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>n − 1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 2: PRINCIPLES OF ELECTRONIC CONFIGURATION & PERIODIC BLOCK MAP */}
+          <section className={cardClass}>
+            <h2 className={`text-lg sm:text-xl font-bold tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              Principles of Electronic Configuration
+            </h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+              {FILLING_RULES.map((rule) => (
+                <div key={rule.title} className={`${subCardClass} space-y-2`}>
+                  <h3 className={`text-sm font-bold ${isDark ? 'text-[#a8c7fa]' : 'text-[#0b57d0]'}`}>{rule.title}</h3>
+                  <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{rule.summary}</p>
+                  <ul className={`space-y-1 text-xs pt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    {rule.points.map((pt, i) => (
+                      <li key={i} className="leading-relaxed">• {pt}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            <div className={subCardClass}>
+              <div className="mb-3">
+                <h3 className={`text-sm font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Energy Sequence of Subshells
+                </h3>
+              </div>
+              <PeriodicSubshellBlockMap isDark={isDark} />
+            </div>
+          </section>
+
+          {/* SECTION 3: ANOMALOUS GROUND-STATE CONFIGURATIONS */}
+          <section className={cardClass}>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div>
+                <h2 className={`text-lg sm:text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Anomalous Ground-State Configurations (Exceptions to Aufbau)
+                </h2>
+                <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Click any element below to inspect its 3D orbital geometry and spin distribution in the simulator
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {KEY_EXCEPTIONS.map((ex) => (
+                <button
+                  key={ex.z}
+                  type="button"
+                  onClick={() => onSelectElementInSimulator(ex.z)}
+                  className={`${subCardClass} text-left transition-all hover:border-[#a8c7fa] group flex flex-col justify-between gap-2`}
+                >
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded-md text-xs font-mono font-bold ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-800'}`}>
+                        Z={ex.z} · {ex.sym}
+                      </span>
+                      <span className={`text-xs font-semibold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
+                        {ELEMENTS_DATABASE[ex.z - 1]?.name}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${isDark ? 'border-[#2d2f31] text-slate-400' : 'border-[#d0d7de] text-slate-600'} group-hover:opacity-100`}>
+                      {ex.tag} ↗
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
+                    <div>
+                      <span className={`text-[10px] block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Predicted (Aufbau)</span>
+                      <span className="line-through text-slate-500">{ex.expected}</span>
+                    </div>
+                    <div>
+                      <span className={`text-[10px] block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Observed Ground State</span>
+                      <span className={isDark ? 'text-[#a8c7fa] font-semibold' : 'text-[#0b57d0] font-semibold'}>
+                        {ex.actual}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className={`text-[11px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    {ANOMALOUS_CONFIGS[ex.z]?.reason}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    function App() {
+      const [activeView, setActiveView] = useState('simulator');
+      const [selectedZ, setSelectedZ] = useState(26);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [blockFilter, setBlockFilter] = useState('all');
+      const [orbitalFilterMode, setOrbitalFilterMode] = useState('all');
+      const [copiedKey, setCopiedKey] = useState(null);
+      const [isDark, setIsDark] = useState(true);
+
+      const [animEnabled, setAnimEnabled] = useState(false);
+      const [animPlaying, setAnimPlaying] = useState(false);
+      const [animElectronCount, setAnimElectronCount] = useState(26);
+      const [animSpeedMs, setAnimSpeedMs] = useState(300);
+
+      const selectedElement = useMemo(() => {
+        return ELEMENTS_DATABASE[selectedZ - 1] || ELEMENTS_DATABASE[0];
+      }, [selectedZ]);
+
+      const handleSelectElement = useCallback(
+        (newZ) => {
+          const clamped = Math.max(1, Math.min(118, Number(newZ)));
+          setSelectedZ(clamped);
+          if (animEnabled) {
+            setAnimPlaying(false);
+            setAnimElectronCount(1);
+          } else {
+            setAnimElectronCount(clamped);
+          }
+        },
+        [animEnabled]
+      );
+
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            handleSelectElement(selectedZ > 1 ? selectedZ - 1 : 118);
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            handleSelectElement(selectedZ < 118 ? selectedZ + 1 : 1);
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [selectedZ, handleSelectElement]);
+
+      const electronSequence = useMemo(() => {
+        return buildElectronSequence(selectedElement.groundSubshells);
+      }, [selectedElement]);
+
+      useEffect(() => {
+        if (!animEnabled || !animPlaying) return;
+        const timer = setInterval(() => {
+          setAnimElectronCount((prev) => {
+            if (prev >= selectedElement.z) {
+              setAnimPlaying(false);
+              return selectedElement.z;
+            }
+            return prev + 1;
+          });
+        }, animSpeedMs);
+        return () => clearInterval(timer);
+      }, [animEnabled, animPlaying, animSpeedMs, selectedElement.z]);
+
+      const activeSubshellsMap = useMemo(() => {
+        if (!animEnabled) {
+          return selectedElement.groundSubshells;
+        }
+        const partial = {};
+        const limit = Math.min(animElectronCount, electronSequence.length);
+        for (let i = 0; i < limit; i++) {
+          const step = electronSequence[i];
+          partial[step.subshell] = (partial[step.subshell] || 0) + 1;
+        }
+        return partial;
+      }, [animEnabled, animElectronCount, electronSequence, selectedElement]);
+
+      const activeOrbitalDiagrams = useMemo(() => {
+        let coreSet = new Set();
+        if (orbitalFilterMode === 'valence' && selectedElement.z > 2) {
+          for (let i = NOBLE_GASES.length - 1; i >= 0; i--) {
+            if (NOBLE_GASES[i].z < selectedElement.z) {
+              coreSet = new Set(NOBLE_GASES[i].subshells);
+              break;
+            }
+          }
+        }
+        return SUBSHELL_ORDER
+          .filter((sub) => activeSubshellsMap[sub] > 0 && !coreSet.has(sub))
+          .map((sub) => generateOrbitalBoxesForSubshell(sub, activeSubshellsMap[sub]));
+      }, [activeSubshellsMap, orbitalFilterMode, selectedElement.z]);
+
+      const activeShells = useMemo(() => {
+        return computeShellDistribution(activeSubshellsMap);
+      }, [activeSubshellsMap]);
+
+      const currentAnimStep = useMemo(() => {
+        if (!animEnabled || animElectronCount < 1) return null;
+        return electronSequence[Math.min(animElectronCount, electronSequence.length) - 1] || null;
+      }, [animEnabled, animElectronCount, electronSequence]);
+
+      const searchMatches = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return null;
+        return new Set(
+          ELEMENTS_DATABASE.filter(
+            (el) =>
+              el.name.toLowerCase().includes(q) ||
+              el.symbol.toLowerCase() === q ||
+              el.symbol.toLowerCase().includes(q) ||
+              String(el.z) === q
+          ).map((el) => el.z)
+        );
+      }, [searchQuery]);
+
+      const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return;
+        const exactZ = parseInt(q, 10);
+        if (!isNaN(exactZ) && exactZ >= 1 && exactZ <= 118) {
+          handleSelectElement(exactZ);
+          return;
+        }
+        const exactSymbol = ELEMENTS_DATABASE.find((el) => el.symbol.toLowerCase() === q);
+        if (exactSymbol) {
+          handleSelectElement(exactSymbol.z);
+          return;
+        }
+        const nameMatch = ELEMENTS_DATABASE.find((el) => el.name.toLowerCase().includes(q));
+        if (nameMatch) {
+          handleSelectElement(nameMatch.z);
+        }
+      };
+
+      const handleCopy = (text, key) => {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        } catch {
+          if (navigator.clipboard) navigator.clipboard.writeText(text);
+        }
+        setCopiedKey(key);
+        setTimeout(() => setCopiedKey(null), 1600);
+      };
+
+      const mainGridRows = useMemo(() => {
+        const grid = Array.from({ length: 7 }, () => Array(18).fill(null));
+        for (const el of ELEMENTS_DATABASE) {
+          if (el.z >= 58 && el.z <= 71) continue;
+          if (el.z >= 90 && el.z <= 103) continue;
+          if (el.period >= 1 && el.period <= 7 && el.group >= 1 && el.group <= 18) {
+            grid[el.period - 1][el.group - 1] = el;
+          }
+        }
+        return grid;
+      }, []);
+
+      const lanthanidesRow = useMemo(
+        () => ELEMENTS_DATABASE.filter((el) => el.z >= 58 && el.z <= 71),
+        []
+      );
+      const actinidesRow = useMemo(
+        () => ELEMENTS_DATABASE.filter((el) => el.z >= 90 && el.z <= 103),
+        []
+      );
+
+      const renderElementTile = (el) => {
+        const isSelected = el.z === selectedZ;
+        const bStyle = BLOCK_STYLES[el.block];
+
+        let isDimmed = false;
+        if (searchMatches && !searchMatches.has(el.z)) {
+          isDimmed = true;
+        }
+        if (blockFilter !== 'all') {
+          if (blockFilter === 'anomalous' && !el.isAnomalous) isDimmed = true;
+          else if (blockFilter !== 'anomalous' && el.block !== blockFilter) isDimmed = true;
+        }
+
+        return (
+          <button
+            key={`el-${el.z}`}
+            type="button"
+            onClick={() => handleSelectElement(el.z)}
+            className={`relative flex flex-col justify-between p-1.5 rounded-lg border text-left transition-all select-none h-12 sm:h-[52px] w-full ${
+              isDark ? bStyle.darkTile : bStyle.lightTile
+            } ${
+              isSelected
+                ? isDark
+                  ? 'ring-2 ring-[#a8c7fa] border-[#a8c7fa] z-10 scale-[1.04]'
+                  : 'ring-2 ring-[#0b57d0] border-[#0b57d0] z-10 scale-[1.04]'
+                : ''
+            } ${isDimmed ? 'opacity-20' : 'opacity-100'}`}
+            title={`${el.z}. ${el.name} (${el.symbol}) — ${el.nobleConfigAufbau}`}
+          >
+            <div className="flex items-center justify-between w-full leading-none">
+              <span className="text-[9px] font-mono opacity-75">{el.z}</span>
+              {el.isAnomalous && (
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              )}
+            </div>
+
+            <div className="text-xs sm:text-[13px] font-semibold font-mono tracking-tight leading-none my-auto">
+              {el.symbol}
+            </div>
+
+            <div className="text-[7px] sm:text-[8px] truncate w-full opacity-70 leading-none">
+              {el.name}
+            </div>
+          </button>
+        );
+      };
+
+      return (
+        <div
+          className={`min-h-screen transition-colors ${
+            isDark ? 'bg-[#131314] text-[#e3e3e3]' : 'bg-[#f8fafd] text-[#1f1f1f]'
+          }`}
+        >
+          {/* Header */}
+          <header
+            className={`sticky top-0 z-30 border-b backdrop-blur-md ${
+              isDark
+                ? 'bg-[#131314]/90 border-[#2d2f31]'
+                : 'bg-[#f8fafd]/90 border-[#e3e8ef]'
+            }`}
+          >
+            <div className="max-w-[1560px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div
+                  className={`inline-flex items-center rounded-full border p-1 ${
+                    isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#dde3ea]'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('simulator')}
+                    className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors ${
+                      activeView === 'simulator'
+                        ? isDark
+                          ? 'bg-[#a8c7fa] text-[#041e49]'
+                          : 'bg-[#0b57d0] text-white'
+                        : isDark
+                        ? 'text-[#c4c7c5] hover:text-white'
+                        : 'text-[#444746] hover:text-black'
+                    }`}
+                  >
+                    Atomic Simulator
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('theory')}
+                    className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors ${
+                      activeView === 'theory'
+                        ? isDark
+                          ? 'bg-[#a8c7fa] text-[#041e49]'
+                          : 'bg-[#0b57d0] text-white'
+                        : isDark
+                        ? 'text-[#c4c7c5] hover:text-white'
+                        : 'text-[#444746] hover:text-black'
+                    }`}
+                  >
+                    Quantum No. & Electronic Configuration
+                  </button>
+                </div>
+
+                <span
+                  className={`text-xs px-2.5 py-0.5 rounded-full font-mono hidden sm:inline-block ${
+                    isDark
+                      ? 'bg-[#1e1f20] text-[#c4c7c5] border border-[#2d2f31]'
+                      : 'bg-[#e8eef5] text-[#444746]'
+                  }`}
+                >
+                  Z = 1–118
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <form onSubmit={handleSearchSubmit} className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-50" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search element or Z..."
+                    aria-label="Search elements"
+                    className={`pl-9 pr-7 py-1.5 text-xs rounded-full border w-44 sm:w-56 focus:outline-none transition-colors ${
+                      isDark
+                        ? 'bg-[#1e1f20] border-[#2d2f31] text-[#e3e3e3] placeholder-[#8e918f] focus:border-[#a8c7fa]'
+                        : 'bg-white border-[#dde3ea] text-[#1f1f1f] placeholder-[#747775] focus:border-[#0b57d0]'
+                    }`}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs opacity-50 hover:opacity-100"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </form>
+
+                <div
+                  className={`inline-flex items-center rounded-full border p-0.5 ${
+                    isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#dde3ea]'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSelectElement(selectedZ > 1 ? selectedZ - 1 : 118)}
+                    className="p-1.5 rounded-full hover:opacity-80 transition-opacity"
+                    title="Previous Element"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="px-2.5 text-xs font-mono font-medium">
+                    {selectedElement.z} · {selectedElement.symbol}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectElement(selectedZ < 118 ? selectedZ + 1 : 1)}
+                    className="p-1.5 rounded-full hover:opacity-80 transition-opacity"
+                    title="Next Element"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsDark(!isDark)}
+                  className={`p-2 rounded-full border transition-colors ${
+                    isDark
+                      ? 'bg-[#1e1f20] border-[#2d2f31] text-[#e3e3e3] hover:bg-[#282a2c]'
+                      : 'bg-white border-[#dde3ea] text-[#1f1f1f] hover:bg-[#f0f4f9]'
+                  }`}
+                  title="Toggle Theme"
+                  aria-label="Toggle Theme"
+                >
+                  {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Content Area */}
+          <main className="max-w-[1560px] mx-auto px-4 sm:px-6 py-5 space-y-5">
+            {activeView === 'theory' ? (
+              <QuantumTheoryView
+                isDark={isDark}
+                onSelectElementInSimulator={(z) => {
+                  handleSelectElement(z);
+                  setActiveView('simulator');
+                }}
+              />
+            ) : (
+              <>
+                {/* Control bar */}
+                <section
+                  className={`rounded-3xl border px-5 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                    isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#e3e8ef]'
+                  }`}
+                >
+                  <div className="flex-1 flex items-center gap-3">
+                    <span className="text-xs font-medium opacity-70 whitespace-nowrap">
+                      Atomic Number
+                    </span>
+                    <span className="text-xs font-mono opacity-50">1</span>
+                    <input
+                      id="z-slider"
+                      type="range"
+                      min={1}
+                      max={118}
+                      value={selectedZ}
+                      onChange={(e) => handleSelectElement(Number(e.target.value))}
+                      className="w-full accent-[#a8c7fa] cursor-pointer h-1.5 rounded-lg"
+                    />
+                    <span className="text-xs font-mono opacity-50">118</span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[
+                      { id: 'all', label: 'All' },
+                      { id: 's', label: 's-block' },
+                      { id: 'p', label: 'p-block' },
+                      { id: 'd', label: 'd-block' },
+                      { id: 'f', label: 'f-block' },
+                      { id: 'anomalous', label: 'Exceptions' }
+                    ].map((blk) => {
+                      const active = blockFilter === blk.id;
+                      return (
+                        <button
+                          key={blk.id}
+                          type="button"
+                          onClick={() => setBlockFilter(blk.id)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                            active
+                              ? isDark
+                                ? 'bg-[#a8c7fa] text-[#041e49]'
+                                : 'bg-[#0b57d0] text-white'
+                              : isDark
+                              ? 'bg-[#131314] text-[#c4c7c5] hover:bg-[#282a2c]'
+                              : 'bg-[#f0f4f9] text-[#444746] hover:bg-[#e1e6ec]'
+                          }`}
+                        >
+                          {blk.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* Periodic Table Grid */}
+                <section
+                  className={`rounded-3xl border p-4 overflow-x-auto ${
+                    isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#e3e8ef]'
+                  }`}
+                >
+                  <div className="min-w-[860px]">
+                    <div className="grid grid-cols-[24px_repeat(18,minmax(0,1fr))] gap-1 mb-1">
+                      <div className="text-[10px] font-mono opacity-40 text-center" />
+                      {Array.from({ length: 18 }, (_, i) => (
+                        <div key={i + 1} className="text-[10px] font-mono opacity-45 text-center">
+                          {i + 1}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-1">
+                      {mainGridRows.map((row, pIdx) => (
+                        <div
+                          key={pIdx + 1}
+                          className="grid grid-cols-[24px_repeat(18,minmax(0,1fr))] gap-1 items-center"
+                        >
+                          <div className="text-[11px] font-mono opacity-45 text-center">
+                            {pIdx + 1}
+                          </div>
+
+                          {row.map((cell, gIdx) => {
+                            if (!cell) {
+                              return <div key={`empty-${pIdx}-${gIdx}`} className="h-12 sm:h-[52px]" />;
+                            }
+                            return renderElementTile(cell);
+                          })}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-3 pt-2.5 border-t border-[#2d2f31]/40 space-y-1">
+                      <div className="grid grid-cols-[24px_repeat(18,minmax(0,1fr))] gap-1 items-center">
+                        <div className="text-[10px] font-mono opacity-45 text-center">4f</div>
+                        <div className="col-span-3 pr-2 text-right text-[10px] font-mono opacity-55">
+                          58–71 (Ce–Lu)
+                        </div>
+                        {lanthanidesRow.map((el) => renderElementTile(el))}
+                        <div className="col-span-1" />
+                      </div>
+
+                      <div className="grid grid-cols-[24px_repeat(18,minmax(0,1fr))] gap-1 items-center">
+                        <div className="text-[10px] font-mono opacity-45 text-center">5f</div>
+                        <div className="col-span-3 pr-2 text-right text-[10px] font-mono opacity-55">
+                          90–103 (Th–Lr)
+                        </div>
+                        {actinidesRow.map((el) => renderElementTile(el))}
+                        <div className="col-span-1" />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Unified Element Overview Card */}
+                <section
+                  className={`rounded-3xl border p-5 ${
+                    isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#e3e8ef]'
+                  }`}
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                    <div className="lg:col-span-7 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2.5">
+                            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                              {selectedElement.name}
+                            </h2>
+                            <span
+                              className={`px-2.5 py-0.5 text-xs font-mono font-semibold rounded-full ${
+                                isDark
+                                  ? BLOCK_STYLES[selectedElement.block].pillDark
+                                  : BLOCK_STYLES[selectedElement.block].pillLight
+                              }`}
+                            >
+                              {selectedElement.symbol} · Z={selectedElement.z}
+                            </span>
+                          </div>
+                          <p className="text-xs opacity-60 mt-1">
+                            {selectedElement.category} · Period {selectedElement.period} ·{' '}
+                            {selectedElement.group ? `Group ${selectedElement.group}` : 'f-block'} ·{' '}
+                            {selectedElement.block}-block
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {selectedElement.shells.map((sh) => (
+                            <span
+                              key={sh.n}
+                              className={`px-2.5 py-1 rounded-xl border text-xs font-mono ${
+                                isDark
+                                  ? 'bg-[#131314] border-[#2d2f31] text-[#c4c7c5]'
+                                  : 'bg-[#f8fafd] border-[#e3e8ef] text-[#444746]'
+                              }`}
+                            >
+                              <strong>{sh.letter}</strong>={sh.count}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
+                        {[
+                          { label: 'Atomic Mass', val: `${selectedElement.mass} u` },
+                          { label: 'Electrons', val: `${selectedElement.z} e⁻` },
+                          {
+                            label: 'Unpaired',
+                            val: `${selectedElement.totalUnpaired} (${selectedElement.magneticCharacter})`
+                          },
+                          {
+                            label: 'Multiplicity',
+                            val: `2S+1 = ${selectedElement.spinMultiplicity}`
+                          }
+                        ].map((item) => (
+                          <div
+                            key={item.label}
+                            className={`p-2.5 rounded-2xl border ${
+                              isDark
+                                ? 'bg-[#131314] border-[#2d2f31]'
+                                : 'bg-[#f8fafd] border-[#e3e8ef]'
+                            }`}
+                          >
+                            <div className="text-[10px] opacity-55">{item.label}</div>
+                            <div className="text-xs font-semibold mt-0.5 truncate">{item.val}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {(selectedElement.isAnomalous || selectedElement.isSuperheavy) && (
+                        <div
+                          className={`px-3.5 py-2.5 rounded-2xl text-xs border flex flex-wrap items-center gap-2 ${
+                            isDark
+                              ? 'bg-[#131314] border-[#2d2f31] text-[#c4c7c5]'
+                              : 'bg-[#f0f4f9] border-[#dde3ea] text-[#444746]'
+                          }`}
+                        >
+                          <span className="font-semibold text-amber-400">
+                            {selectedElement.statusLabel}:
+                          </span>
+                          <span className="opacity-85">{selectedElement.statusNote}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="lg:col-span-5 grid grid-cols-1 gap-2.5">
+                      <div
+                        className={`p-3.5 rounded-2xl border ${
+                          isDark ? 'bg-[#131314] border-[#2d2f31]' : 'bg-[#f8fafd] border-[#e3e8ef]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] opacity-55">Noble-Gas Configuration</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(selectedElement.nobleConfigAufbau, 'noble')}
+                            className="flex items-center gap-1 text-[11px] opacity-65 hover:opacity-100 transition-opacity"
+                          >
+                            {copiedKey === 'noble' ? (
+                              <>
+                                <Check className="w-3 h-3" />
+                                <span>Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <div
+                          className={`text-base font-mono font-semibold tracking-wide break-words ${
+                            isDark ? 'text-[#a8c7fa]' : 'text-[#0b57d0]'
+                          }`}
+                        >
+                          {selectedElement.nobleConfigAufbau}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`p-3.5 rounded-2xl border ${
+                          isDark ? 'bg-[#131314] border-[#2d2f31]' : 'bg-[#f8fafd] border-[#e3e8ef]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] opacity-55">Full Shell Configuration</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(selectedElement.fullConfigShell, 'full')}
+                            className="flex items-center gap-1 text-[11px] opacity-65 hover:opacity-100 transition-opacity"
+                          >
+                            {copiedKey === 'full' ? (
+                              <>
+                                <Check className="w-3 h-3" />
+                                <span>Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <div className="text-xs sm:text-sm font-mono font-medium leading-relaxed break-words opacity-90">
+                          {selectedElement.fullConfigShell}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 3D Visualizer & Orbital Filling Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                  <div
+                    className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col ${
+                      isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#e3e8ef]'
+                    }`}
+                  >
+                    <Interactive3DAtomSimulator
+                      element={selectedElement}
+                      activeSubshellsMap={activeSubshellsMap}
+                      activeShells={activeShells}
+                      isDark={isDark}
+                    />
+                  </div>
+
+                  <div
+                    className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col space-y-4 ${
+                      isDark ? 'bg-[#1e1f20] border-[#2d2f31]' : 'bg-white border-[#e3e8ef]'
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold">
+                          Orbital Box Diagram · {selectedElement.symbol}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOrbitalFilterMode(orbitalFilterMode === 'all' ? 'valence' : 'all')
+                          }
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-mono border transition-colors ${
+                            orbitalFilterMode === 'valence'
+                              ? isDark
+                                ? 'bg-[#a8c7fa] text-[#041e49] border-transparent'
+                                : 'bg-[#0b57d0] text-white border-transparent'
+                              : isDark
+                              ? 'bg-[#131314] border-[#2d2f31] text-[#c4c7c5]'
+                              : 'bg-[#f0f4f9] border-[#dde3ea] text-[#444746]'
+                          }`}
+                        >
+                          {orbitalFilterMode === 'all' ? 'All Subshells' : 'Valence Only'}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextState = !animEnabled;
+                            setAnimEnabled(nextState);
+                            if (nextState) {
+                              setAnimElectronCount(1);
+                              setAnimPlaying(true);
+                            } else {
+                              setAnimPlaying(false);
+                              setAnimElectronCount(selectedElement.z);
+                            }
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                            animEnabled
+                              ? isDark
+                                ? 'bg-[#a8c7fa] text-[#041e49]'
+                                : 'bg-[#0b57d0] text-white'
+                              : isDark
+                              ? 'bg-[#131314] border border-[#2d2f31] text-[#e3e3e3] hover:bg-[#282a2c]'
+                              : 'bg-[#f0f4f9] text-[#1f1f1f] hover:bg-[#e1e6ec]'
+                          }`}
+                        >
+                          <Play className="w-3 h-3" />
+                          <span>{animEnabled ? 'Stop Filling' : 'Simulate Filling'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {animEnabled && (
+                      <div
+                        className={`px-3.5 py-2 rounded-2xl border flex flex-wrap items-center justify-between gap-2 text-xs font-mono ${
+                          isDark ? 'bg-[#131314] border-[#2d2f31]' : 'bg-[#f8fafd] border-[#e3e8ef]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAnimPlaying(false);
+                              setAnimElectronCount(1);
+                            }}
+                            className="p-1 rounded-full hover:opacity-75"
+                            title="Reset"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAnimPlaying(false);
+                              setAnimElectronCount((c) => Math.max(1, c - 1));
+                            }}
+                            className="p-1 rounded-full hover:opacity-75"
+                            title="Previous electron"
+                          >
+                            <SkipBack className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (animElectronCount >= selectedElement.z) {
+                                setAnimElectronCount(1);
+                                setAnimPlaying(true);
+                              } else {
+                                setAnimPlaying(!animPlaying);
+                              }
+                            }}
+                            className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium flex items-center gap-1"
+                          >
+                            {animPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                            <span>{animPlaying ? 'Pause' : 'Play'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAnimPlaying(false);
+                              setAnimElectronCount((c) => Math.min(selectedElement.z, c + 1));
+                            }}
+                            className="p-1 rounded-full hover:opacity-75"
+                            title="Next electron"
+                          >
+                            <SkipForward className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span>
+                            {animElectronCount}/{selectedElement.z} e⁻
+                          </span>
+                          {currentAnimStep && (
+                            <span className="opacity-70">
+                              · {currentAnimStep.subshell} (m_l={currentAnimStep.ml}, {currentAnimStep.ms})
+                            </span>
+                          )}
+                          <div className="flex items-center gap-1">
+                            {[
+                              { label: '0.5x', ms: 600 },
+                              { label: '1x', ms: 300 },
+                              { label: '2x', ms: 150 }
+                            ].map((sp) => (
+                              <button
+                                key={sp.label}
+                                type="button"
+                                onClick={() => setAnimSpeedMs(sp.ms)}
+                                className={`px-2 py-0.5 rounded-full text-[10px] ${
+                                  animSpeedMs === sp.ms
+                                    ? isDark
+                                      ? 'bg-[#a8c7fa] text-[#041e49]'
+                                      : 'bg-[#0b57d0] text-white'
+                                    : 'opacity-60'
+                                }`}
+                              >
+                                {sp.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1 flex-1 content-start">
+                      {activeOrbitalDiagrams.map((diag) => (
+                        <SubshellOrbitalCard
+                          key={diag.subshell}
+                          diagram={diag}
+                          isHighlighted={
+                            animEnabled &&
+                            currentAnimStep &&
+                            currentAnimStep.subshell === diag.subshell
+                          }
+                          isDark={isDark}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    const rootElement = document.getElementById('root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>
